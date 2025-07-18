@@ -1,12 +1,62 @@
-# React + Vite
+# 🍣 Sushi Yuen (NOT REAL) Reservation System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web-based reservation system built for **Sushi Yuen**, allowing customers to book dining sessions and admins to manage reservations with ease.
 
-Currently, two official plugins are available:
+## 🔧 Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Frontend**: React, Tailwind CSS
+- **Authentication & DB**: Supabase
+- **Backend (planned)**: Node.js + Express (for complex logic like admin controls)
 
-## Expanding the ESLint configuration
+## 🧠 Features
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 🧍 Customer
+
+- Sign up / Log in
+- Browse available time slots
+- Book a reservation
+- View existing bookings
+
+### 🧑‍💼 Admin
+
+- Log in with elevated access
+- Open reservation window by month
+- View, update, and cancel reservations
+- Modify session availability
+
+## 📅 Reservation Rules
+
+- **Sessions Per Day**:
+
+  - Lunch: 12:00 PM (12 seats)
+  - Dinner 1: 5:30 PM (12 seats)
+  - Dinner 2: 8:00 PM (12 seats)
+
+- **Saturday**: No lunch session (12:00 PM unavailable)
+
+## 🗂️ Database Overview
+
+### Tables:
+
+- `users`: customer/admin info (via Supabase Auth)
+- `reservations`: links user, session, date, and guest count
+- `sessions`: fixed session times and capacities
+- `reservation_types`: rules per weekday/weekend (e.g., pricing, limits)
+
+## ✅ TODO
+
+- [x] Set up Supabase project and tables
+- [x] Basic auth + role management
+- [ ] Customer booking flow
+- [ ] Admin dashboard
+- [ ] Backend server for admin logic
+
+## 🚀 Running Locally
+
+```bash
+# Install dependencies
+npm install
+
+# Start the dev server
+npm run dev
+```
