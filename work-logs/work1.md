@@ -20,6 +20,7 @@
 - Implemented signup UI (collects name, phone, email, password, confirm password).
 - Added header conditional rendering for login/logout based on auth state.
 - Tested OAuth (Google) authentication.
+- Implemented protected routes.
 
 - When building large component:
   - on top, comments what sub-component that large component has
@@ -27,7 +28,6 @@
 
 ## Next Steps
 
-- Implement protected routes.
 - Connect signup form to Supabase to store name and phone in the database after signup.
 - Add error and success feedback for authentication actions.
 - Implement the landing page.
