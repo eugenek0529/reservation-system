@@ -11,16 +11,46 @@ export const AuthProvider = ({ children }) => {
 
   // 3. fetch session and subscribe to auth state changes
   useEffect(() => {
-    const getSession = async () => {
+    const getSessionAndInsertProfile = async () => {
       const { data, error } = await supabase.auth.getSession();
-      setSession(data?.session || null);
+      // setSession(data?.session || null); // This wont re-render the component
+      const currentSession = data?.session || null; // this will re-render the component
+      setSession(currentSession);
       setLoading(false);
       if (error) {
         console.error("Error fetching session from AuthContext:", error);
+        return;
+      }
+
+      if (currentSession?.user) {
+        const user = currentSession.user;
+        const { data: profileData, error: profileError } = await supabase
+          .from("user_profiles")
+          .select("id")
+          .eq("id", user.id)
+          .single();
+
+        if (!profileData) {
+          // If no profile exists, create one
+          const { error: insertError } = await supabase
+            .from("user_profiles")
+            .insert({
+              id: user.id,
+              name: user.user_metadata.full_name || "",
+              email: user.email,
+              phone: "",
+            });
+          if (insertError) {
+            console.error("Error creating user profile:", insertError);
+            throw insertError;
+          } else {
+            console.log("User profile inserted or already exists.");
+          }
+        }
       }
     };
 
-    getSession();
+    getSessionAndInsertProfile();
 
     const {
       data: { subscription },
@@ -34,7 +64,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const signUp = async (email, password) => {
-    const { data, error } = await supabase.auth.signup({ email, password });
+    const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
       console.error("Error signing up:", error);
       throw error;
@@ -53,6 +83,39 @@ export const AuthProvider = ({ children }) => {
     if (error) {
       console.error("Error signing up with Google:", error);
       throw error;
+    }
+    // check if the user data is in the user_profiles table
+
+    if (data?.session?.user) {
+      const { user } = data.session;
+      console.log(user_metadata, "User metadata:", user.user_metadata);
+      const { data: profileData, error: profileError } = await supabase
+        .from("user_profiles")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching user profile:", profileError);
+        throw profileError;
+      }
+
+      if (!profileData) {
+        // If no profile exists, create one
+        const { error: insertError } = await supabase
+          .from("user_profiles")
+          .insert({
+            id: user.id,
+            name: user.user_metadata.full_name || "",
+            email: user.email,
+            phone: "",
+          });
+
+        if (insertError) {
+          console.error("Error creating user profile:", insertError);
+          throw insertError;
+        }
+      }
     }
     console.log(`Sign up with Google successful:`, data);
     return data;

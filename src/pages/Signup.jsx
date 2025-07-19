@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import LandingHeader from "../components/Landing-Header";
 import { useAuth } from "../context/AuthProvider";
+import { supabase } from "../supabase/supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 function Signup() {
   const [name, setName] = useState("");
@@ -8,6 +10,8 @@ function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const navigate = useNavigate();
 
   const { signUp, signInWithOAuth } = useAuth();
 
@@ -19,9 +23,24 @@ function Signup() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add signup logic here
+    try {
+      const { user } = await signUp(email, password);
+      if (user) {
+        await supabase.from("user_profiles").insert({
+          id: user.id,
+          name,
+          phone,
+        });
+      }
+      console.log("Sign Up successful:", user);
+      // Redirect to the home page or show a success message
+      navigate("/");
+    } catch (error) {
+      console.error("Sign Up error:", error.message);
+      // Handle error (e.g., show a notification)
+    }
   };
 
   return (
