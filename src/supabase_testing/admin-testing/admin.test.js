@@ -1,4 +1,4 @@
-// sp-testing/adminTest.js
+///admin.test.js
 import "dotenv/config";
 import {
   supabase,
