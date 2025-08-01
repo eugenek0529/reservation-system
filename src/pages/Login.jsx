@@ -1,20 +1,23 @@
 import React, { useState } from "react";
 import LandingHeader from "../components/Landing-Header";
 import { useAuth } from "../context/AuthProvider";
+import { Link, useNavigate } from "react-router-dom";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-  const { signInWithOAuth } = useAuth();
+  const { signInWithOAuth, signIn } = useAuth();
 
   const handleLoginSubmit = async (e) => {
-    e.preventdefult();
+    e.preventDefault();
     try {
       // Assuming you have a signIn function in your AuthProvider
-      await signIn(email, password);
+      const { data, userRole } = await signIn(email, password);
       console.log("Login successful");
       // Redirect to home page or show a success message
+      navigate(userRole === "admin" ? "/admin" : "/user");
     } catch (error) {
       console.error("Login error:", error.message);
       // Handle error (e.g., show a notification)
@@ -24,9 +27,10 @@ function Login() {
   const handleGoogleSignIn = async () => {
     e.preventdefult();
     try {
-      await signInWithOAuth();
+      const { data, userRole } = await signInWithOAuth();
       console.log("Google Sign In successful");
       // Redirect to home page or show a success message
+      navigate(userRole === "admin" ? "/admin" : "/user");
     } catch (error) {
       console.error("Google Sign In error:", error.message);
       // Handle error (e.g., show a notification)
@@ -109,9 +113,9 @@ function Login() {
 
           <div className="text-center mt-4 text-sm text-gray-600">
             Don't have an account?{" "}
-            <a href="#" className="text-blue-500 hover:underline">
+            <Link to="/signup" className="text-blue-500 hover:underline">
               Sign up
-            </a>
+            </Link>
           </div>
         </div>
       </div>

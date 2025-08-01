@@ -1,10 +1,21 @@
-import React from "react";
+import React, { useEffect } from "react";
 import LandingHeader from "../components/Landing-Header";
 import RestaurantGallery from "../components/LandingPage/RestaurantGallery";
 import RestaurantDetails from "../components/LandingPage/RestaurantDetails";
 import MakeReservation from "../components/LandingPage/MakeReservation";
+import { useAuth } from "../context/AuthProvider";
+import { useNavigate } from "react-router-dom";
 
 function LandingPage() {
+  const { session, loading, userRole } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && session && userRole === 'admin') {
+      navigate('/admin');
+    }
+  }, [session, userRole, loading, navigate]);
+
   return (
     <div className="landing-page min-h-screen font-sans">
       <LandingHeader />

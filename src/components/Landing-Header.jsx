@@ -16,19 +16,19 @@ function Header() {
         {session ? (
           <button
             onClick={signOut}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            className="bg-red-500 text-xs text-white px-4 py-2 rounded hover:bg-red-600"
           >
             Log out
           </button>
         ) : (
           <>
             <Link to="/signup">
-              <button className="bg-blue-600 text-white px-6 py-1 rounded-md hover:bg-blue-700 cursor-pointer">
+              <button className="bg-blue-600 text-xs text-white px-6 py-1 rounded-md hover:bg-blue-700 cursor-pointer">
                 Sign up
               </button>
             </Link>
             <Link to="/login">
-              <button className="text-gray-700 px-6 py-1 rounded-md hover:bg-gray-100 cursor-pointer border border-gray-300 font-medium">
+              <button className="text-gray-700 text-xs px-6 py-1 rounded-md hover:bg-gray-100 cursor-pointer border border-gray-300 font-medium">
                 Log in
               </button>
             </Link>

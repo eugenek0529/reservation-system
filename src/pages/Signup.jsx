@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import LandingHeader from "../components/Landing-Header";
 import { useAuth } from "../context/AuthProvider";
 import { supabase } from "../supabase/supabaseClient";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 function Signup() {
   const [name, setName] = useState("");
@@ -157,9 +157,9 @@ function Signup() {
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-500">
               Already have an account?{" "}
-              <a href="/login" className="text-blue-600 hover:underline">
+              <Link to="/login" className="text-blue-600 hover:underline">
                 Log in
-              </a>
+              </Link>
             </p>
           </div>
         </div>
