@@ -1,3 +1,9 @@
+/*
+  RestaurantDetails.jsx 
+  Goal - Renders restuarnat details including restaurant info, reservation types
+       - The reservation types are public data, directly fetch from the supabase
+
+*/
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../supabase/supabaseClient";
 

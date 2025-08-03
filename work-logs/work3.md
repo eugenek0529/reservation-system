@@ -23,7 +23,8 @@ Implemented 3-level role-based routing system to control access between differen
 ### 1. AuthProvider
 - Added `userRole` state to track user role from JWT claims
 - Created helper function to extract role from session
-- Default role is 'user' if no role specified
+- if user is not logged in, then no role is given
+- Default role for logged in user is 'user' if no role specified
 
 ### 2. ProtectedRoute
 - Enhanced existing component to handle role-based access control
