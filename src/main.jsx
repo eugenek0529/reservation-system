@@ -9,6 +9,10 @@ import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import UserDashboard from "./pages/user/UserDashboard.jsx";
+import AdminReservation from "./pages/admin/AdminReservation.jsx";
+import AdminTypes from "./pages/admin/AdminTypes.jsx";
+import AdminCustomers from "./pages/admin/AdminCustomers.jsx";
+import AdminSetting from "./pages/admin/AdminSetting.jsx";
 
 import "./index.css";
 
@@ -24,7 +28,39 @@ const router = createBrowserRouter([
       <ProtectedRoute allowedRoles={["admin"]} redirectedTo="/">
         <AdminDashboard />
       </ProtectedRoute>
-    )
+    ),
+  },
+  {
+    path: "/admin/reservations",
+    element: (
+      <ProtectedRoute allowedRoles={["admin"]} redirectedTo="/">
+        <AdminReservation />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/customers",
+    element: (
+      <ProtectedRoute allowedRoles={["admin"]} redirectedTo="/">
+        <AdminCustomers />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/types",
+    element: (
+      <ProtectedRoute allowedRoles={["admin"]} redirectedTo="/">
+        <AdminTypes />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/settings",
+    element: (
+      <ProtectedRoute allowedRoles={["admin"]} redirectedTo="/">
+        <AdminSetting />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/user",
@@ -32,7 +68,7 @@ const router = createBrowserRouter([
       <ProtectedRoute allowedRoles={["user"]} redirectedTo="/">
         <UserDashboard />
       </ProtectedRoute>
-    )
+    ),
   },
   {
     path: "/signup",
