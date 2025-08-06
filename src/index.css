@@ -1,2 +1,69 @@
 @import "tailwindcss";
 
+/* Custom CSS Variables for consistent color scheme */
+:root {
+  /* Primary colors matching the graph component */
+  --color-reservation: #ef4444; /* Red for reservations */
+  --color-pending: #fbbf24;     /* Yellow for pending */
+  --color-available: #22c55e;   /* Green for available */
+  
+  /* Additional variations */
+  --color-reservation-light: #fef2f2;
+  --color-pending-light: #fffbeb;
+  --color-available-light: #f0fdf4;
+  
+  /* Text colors */
+  --text-reservation: #dc2626;  /* Darker red for text */
+  --text-pending: #d97706;      /* Darker yellow for text */
+  --text-available: #16a34a;    /* Darker green for text */
+}
+
+/* Custom utility classes for the color scheme */
+.text-reservation {
+  color: var(--color-reservation);
+}
+
+.text-pending {
+  color: var(--color-pending);
+}
+
+.text-available {
+  color: var(--color-available);
+}
+
+.bg-reservation {
+  background-color: var(--color-reservation);
+}
+
+.bg-pending {
+  background-color: var(--color-pending);
+}
+
+.bg-available {
+  background-color: var(--color-available);
+}
+
+.bg-reservation-light {
+  background-color: var(--color-reservation-light);
+}
+
+.bg-pending-light {
+  background-color: var(--color-pending-light);
+}
+
+.bg-available-light {
+  background-color: var(--color-available-light);
+}
+
+.border-reservation {
+  border-color: var(--color-reservation);
+}
+
+.border-pending {
+  border-color: var(--color-pending);
+}
+
+.border-available {
+  border-color: var(--color-available);
+}
+

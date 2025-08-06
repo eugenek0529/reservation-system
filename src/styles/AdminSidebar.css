@@ -1,0 +1,250 @@
+/* Admin Sidebar Styling */
+.admin-sidebar {
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  overflow: hidden;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+/* Collapsed state */
+.admin-sidebar.collapsed {
+  width: 80px;
+}
+
+/* Expanded state */
+.admin-sidebar.expanded {
+  width: 280px;
+}
+
+.admin-sidebar .sidebar-header {
+  padding: 1.5rem 1rem 1rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  height: auto;
+}
+
+.admin-sidebar.collapsed .sidebar-header {
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Header content layout */
+.header-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.admin-sidebar .sidebar-header h3 {
+  font-weight: 600;
+  font-size: 1.125rem;
+  margin: 0;
+  color: #111827;
+}
+
+.admin-sidebar .sidebar-header p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0.25rem 0 0 0;
+}
+
+.sidebar-toggle {
+  width: 32px;
+  height: 32px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-toggle:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: scale(1.05);
+}
+
+.sidebar-toggle:active {
+  transform: scale(0.95);
+}
+
+.toggle-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s ease;
+  color: #64748b;
+}
+
+/* Remove the rotation for expanded state since we want left arrow */
+.toggle-icon.rotated {
+  /* transform: rotate(180deg); */
+}
+
+/* Collapsed toggle container */
+.collapsed-toggle-container {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.collapsed-toggle {
+  margin-top: 1rem; /* Added top margin for better alignment */
+  margin-bottom: 0.25rem; /* Equal spacing to match expanded state */
+}
+
+/* Horizontal break under collapsed toggle */
+.collapsed-toggle-container::after {
+  content: '';
+  position: absolute;
+  bottom: -1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 1px;
+  background-color: #e5e7eb;
+  border-radius: 1px;
+}
+
+/* Navigation container */
+.admin-sidebar .nav {
+  padding: 0;
+  margin: 0;
+  transition: padding-top 0.3s ease;
+}
+
+/* Add top padding to nav when collapsed to match expanded header space */
+.admin-sidebar.collapsed .nav {
+  padding-top: 5rem; /* This matches the header height */
+}
+
+.admin-sidebar.expanded .nav {
+  padding-top: 0;
+}
+
+.admin-sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  margin: 0.25rem 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  color: #374151;
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  width: calc(100% - 1rem);
+  text-align: center;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.admin-sidebar.expanded .nav-link {
+  justify-content: space-between;
+  text-align: left;
+  padding: 0.75rem 1rem;
+}
+
+.admin-sidebar .nav-link:hover {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+.admin-sidebar .nav-link.active {
+  background-color: #f3f4f6;
+  color: #111827;
+  font-weight: 500;
+}
+
+.admin-sidebar .nav-link svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.admin-sidebar.expanded .nav-link svg {
+  margin-right: 0.75rem;
+}
+
+.admin-sidebar .nav-link .button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.admin-sidebar.expanded .nav-link .button-content {
+  justify-content: flex-start;
+}
+
+.admin-sidebar .nav-link .button-content > *:last-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-sidebar .badge {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.admin-sidebar.collapsed .badge {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-sidebar .nav-item {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Tooltip for collapsed state */
+.admin-sidebar.collapsed .nav-link:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #374151;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-left: 0.5rem;
+  pointer-events: none;
+}
+  
