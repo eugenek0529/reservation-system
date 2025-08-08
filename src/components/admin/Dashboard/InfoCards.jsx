@@ -54,20 +54,28 @@ const InfoCards = () => {
       {cardData.map((card, index) => (
         <div
           key={index}
-          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col h-full"
         >
-          <div className="flex justify-between items-start mb-4">
-            <h3 className="text-sm font-medium text-gray-700">{card.title}</h3>
-            <div className="text-gray-500">
+          {/* Header section with title and icon */}
+          <div className="flex justify-between items-start mb-6">
+            <h3 className="text-sm font-medium text-gray-700 leading-tight flex-1 mr-3">{card.title}</h3>
+            <div className="text-gray-500 flex-shrink-0">
               {card.icon}
             </div>
           </div>
-          <div className="mb-2">
-            <span className={`text-3xl font-bold ${card.color}`}>
-              {card.value}
-            </span>
+          
+          {/* Spacer to push content to bottom */}
+          <div className="flex-1"></div>
+          
+          {/* Bottom section with value and subtitle */}
+          <div className="space-y-2">
+            <div className="mb-2">
+              <span className={`text-3xl font-bold ${card.color}`}>
+                {card.value}
+              </span>
+            </div>
+            <p className="text-sm text-gray-500">{card.subtitle}</p>
           </div>
-          <p className="text-sm text-gray-500">{card.subtitle}</p>
         </div>
       ))}
     </div>

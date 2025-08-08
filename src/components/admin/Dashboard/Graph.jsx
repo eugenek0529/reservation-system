@@ -50,7 +50,7 @@ const Graph = () => {
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h2 className="text-xl font-bold text-gray-800 mb-1">Daily Capacity Overview</h2>
+          <h2 className="text-xl text-gray-800 mb-1">Daily Capacity Overview</h2>
           <p className="text-sm text-gray-600">Seat availability breakdown for selected date</p>
         </div>
         
@@ -139,7 +139,7 @@ const Graph = () => {
 
       {/* Capacity Breakdown */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Capacity Breakdown</h3>
+        <h3 className="text-lg text-gray-800 mb-4 text-center">Capacity Breakdown</h3>
         
         <div className="space-y-3">
           {/* Reservations */}
