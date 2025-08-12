@@ -91,7 +91,7 @@ function iso(d) {
   return d.toISOString().slice(0, 10);
 }
 
-export default function MonthlyView({ selectedDate = new Date(), metricsByDate = {} }) {
+export default function MonthlyView({ selectedDate = new Date(), metricsByDate = {}, onSelectDate }) {
   const month = selectedDate.getMonth();
   const year = selectedDate.getFullYear();
 
@@ -133,7 +133,13 @@ export default function MonthlyView({ selectedDate = new Date(), metricsByDate =
           return (
             <div
               key={key}
-              className={`rounded-lg border p-2 flex flex-col items-center justify-between bg-white
+              role="button"
+              tabIndex={0}
+              onClick={() => onSelectDate && onSelectDate(new Date(d))}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && onSelectDate) onSelectDate(new Date(d));
+              }}
+              className={`rounded-lg border p-2 flex flex-col items-center justify-between bg-white cursor-pointer hover:bg-gray-50
                 ${inMonth ? 'border-gray-200' : 'border-gray-100 bg-gray-50'}
                 ${isToday ? 'ring-2 ring-gray-900 ring-offset-1' : ''}`}
               style={{ minHeight: 84 }}

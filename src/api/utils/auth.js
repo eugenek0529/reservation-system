@@ -1,6 +1,3 @@
-
-
-
 import { supabase } from '../../supabase/supabaseClient';
 
 /** Returns the current access token (JWT with role claim). */
