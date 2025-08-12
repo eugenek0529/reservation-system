@@ -26,7 +26,7 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { user } = await signUp(email, password);
+      const { user } = await signUp(email, password, name, phone);
       if (user) {
         await supabase.from("user_profiles").insert({
           id: user.id,

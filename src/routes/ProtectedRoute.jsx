@@ -15,7 +15,6 @@ function ProtectedRoute({ children, allowedRoles = [], redirectTo = "/" }) {
     return <Navigate to={redirectTo} replace />;
   }
 
-
   return children;
 }
 

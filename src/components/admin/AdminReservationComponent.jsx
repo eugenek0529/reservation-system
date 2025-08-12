@@ -1,34 +1,38 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import DailyviewList from './Reservations/DailyviewList';
-import DailyviewTimeline from './Reservations/DailyviewTimeline';
-import MonthlyView from './Reservations/MonthlyView';
-import ViewToggle from './Reservations/ViewToggle';
-import DateNavigator from './Reservations/DateNavigator';
-import mockReservations from './Reservations/mockReservations';
-import { ReservationAvailabilityAPI } from '../../api';
+import React, { useEffect, useMemo, useState } from "react";
+import DailyviewList from "./Reservations/DailyviewList";
+import DailyviewTimeline from "./Reservations/DailyviewTimeline";
+import MonthlyView from "./Reservations/MonthlyView";
+import ViewToggle from "./Reservations/ViewToggle";
+import DateNavigator from "./Reservations/DateNavigator";
+import { ReservationAvailabilityAPI } from "../../api";
+import { useAdminReservations } from "../../context/AdminReservationContext";
 
 function AdminReservationComponent() {
-  const [viewMode, setViewMode] = useState('daily');
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  
-  // Replace mock data with real data state
-  const [reservations, setReservations] = useState([]);
-  const [monthlyMetrics, setMonthlyMetrics] = useState({});
-  const [loadingReservations, setLoadingReservations] = useState(false);
-  const [loadingMetrics, setLoadingMetrics] = useState(false);
+  const [viewMode, setViewMode] = useState("daily");
 
-  // Monthly availability state
+  // Use context instead of local state
+  const {
+    reservations,
+    monthlyMetrics,
+    loading,
+    selectedDate,
+    setSelectedDate,
+    fetchMonthlyMetrics,
+  } = useAdminReservations();
+
+  // Monthly availability state (keep this local)
   const [monthChecking, setMonthChecking] = useState(false);
   const [monthExists, setMonthExists] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState(null);
-  const [monthError, setMonthError] = useState('');
+  const [monthError, setMonthError] = useState("");
 
   const navigateDate = (dir) => {
-    setSelectedDate(prev => {
+    setSelectedDate((prev) => {
       const d = new Date(prev);
-      if (viewMode === 'daily') d.setDate(d.getDate() + (dir === 'prev' ? -1 : 1));
-      else d.setMonth(d.getMonth() + (dir === 'prev' ? -1 : 1));
+      if (viewMode === "daily")
+        d.setDate(d.getDate() + (dir === "prev" ? -1 : 1));
+      else d.setMonth(d.getMonth() + (dir === "prev" ? -1 : 1));
       return d;
     });
   };
@@ -36,100 +40,59 @@ function AdminReservationComponent() {
   // Helpers
   const monthStartISO = useMemo(() => {
     const d = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-    d.setHours(0,0,0,0);
-    return d.toISOString().slice(0,10); // YYYY-MM-01
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString().slice(0, 10); // YYYY-MM-01
   }, [selectedDate]);
 
   const monthLabel = useMemo(
-    () => selectedDate.toLocaleString(undefined, { month: 'long', year: 'numeric' }),
+    () =>
+      selectedDate.toLocaleString(undefined, {
+        month: "long",
+        year: "numeric",
+      }),
     [selectedDate]
   );
 
   // Check if month availability exists whenever monthly view + date changes
   useEffect(() => {
-    if (viewMode !== 'monthly') return;
+    if (viewMode !== "monthly") return;
     let cancelled = false;
     setMonthChecking(true);
-    setMonthError('');
+    setMonthError("");
     ReservationAvailabilityAPI.monthExists(monthStartISO)
-      .then(exists => { if (!cancelled) setMonthExists(Boolean(exists)); })
-      .catch(e => { if (!cancelled) setMonthError(e?.message || 'Failed to check month'); })
-      .finally(() => { if (!cancelled) setMonthChecking(false); });
-    return () => { cancelled = true; };
-  }, [viewMode, monthStartISO]);
-
-  // Fetch daily reservations when date changes
-  useEffect(() => {
-    if (viewMode !== 'daily') return;
-    
-    let cancelled = false;
-    setLoadingReservations(true);
-    
-    const dateISO = selectedDate.toISOString().slice(0, 10);
-    ReservationAvailabilityAPI.getDailyReservations(dateISO)
-      .then(data => {
-        if (!cancelled) setReservations(data);
+      .then((exists) => {
+        if (!cancelled) setMonthExists(Boolean(exists));
       })
-      .catch(e => {
-        if (!cancelled) console.error('Failed to fetch reservations:', e);
+      .catch((e) => {
+        if (!cancelled) setMonthError(e?.message || "Failed to check month");
       })
       .finally(() => {
-        if (!cancelled) setLoadingReservations(false);
+        if (!cancelled) setMonthChecking(false);
       });
-
-    return () => { cancelled = true; };
-  }, [viewMode, selectedDate]);
+    return () => {
+      cancelled = true;
+    };
+  }, [viewMode, monthStartISO]);
 
   // Fetch monthly metrics when monthly view is active
   useEffect(() => {
-    if (viewMode !== 'monthly') return;
-    
-    let cancelled = false;
-    setLoadingMetrics(true);
-    
-    ReservationAvailabilityAPI.getMonthlyMetrics(monthStartISO)
-      .then(data => {
-        if (!cancelled) {
-          // Group by date and calculate totals correctly
-          const metrics = {};
-          data.forEach(item => {
-            const dateKey = item.available_date;
-            if (!metrics[dateKey]) {
-              metrics[dateKey] = { total: 0, reserved: 0, pending: 0, available: 0 };
-            }
-            const maxCap = item.reservation_slot?.max_capacity || 0;
-            metrics[dateKey].total += maxCap;
-            metrics[dateKey].reserved += item.current_capacity || 0;
-            metrics[dateKey].pending += item.pending || 0;
-          });
-          
-          // Calculate available after summing all slots
-          Object.keys(metrics).forEach(dateKey => {
-            metrics[dateKey].available = Math.max(0, metrics[dateKey].total - metrics[dateKey].reserved - metrics[dateKey].pending);
-          });
-          
-          setMonthlyMetrics(metrics);
-        }
-      })
-      .catch(e => {
-        if (!cancelled) console.error('Failed to fetch monthly metrics:', e);
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingMetrics(false);
-      });
-
-    return () => { cancelled = true; };
-  }, [viewMode, monthStartISO]);
+    if (viewMode !== "monthly") return;
+    fetchMonthlyMetrics(monthStartISO);
+  }, [viewMode, monthStartISO, fetchMonthlyMetrics]);
 
   async function handleOpenMonth() {
     try {
       setSeeding(true);
-      setMonthError('');
-      const res = await ReservationAvailabilityAPI.ensureMonthAvailability(monthStartISO);
+      setMonthError("");
+      const res = await ReservationAvailabilityAPI.ensureMonthAvailability(
+        monthStartISO
+      );
       setSeedResult(res);
       setMonthExists(true);
+      // Refresh monthly metrics after opening month
+      fetchMonthlyMetrics(monthStartISO);
     } catch (e) {
-      setMonthError(e?.message || 'Failed to open month');
+      setMonthError(e?.message || "Failed to open month");
     } finally {
       setSeeding(false);
     }
@@ -138,9 +101,9 @@ function AdminReservationComponent() {
   const handleMonthDateSelect = (dateObj) => {
     // normalize start-of-day
     const d = new Date(dateObj);
-    d.setHours(0,0,0,0);
+    d.setHours(0, 0, 0, 0);
     setSelectedDate(d);
-    setViewMode('daily');
+    setViewMode("daily");
   };
 
   return (
@@ -148,37 +111,53 @@ function AdminReservationComponent() {
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Reservations</h1>
-          <p className="text-sm text-gray-500">Manage all reservations of the day and month</p>
+          <p className="text-sm text-gray-500">
+            Manage all reservations of the day and month
+          </p>
         </div>
-        <button className="bg-gray-900 text-sm text-white px-4 py-2 rounded-lg hover:bg-gray-800">New Reservation</button>
+        <button className="bg-gray-900 text-sm text-white px-4 py-2 rounded-lg hover:bg-gray-800">
+          New Reservation
+        </button>
       </div>
 
       <div className="p-4 border border-gray-300 rounded-lg flex min-h-screen">
         <div className="w-full">
-          <div className="mb-3"><ViewToggle value={viewMode} onChange={setViewMode} /></div>
+          <div className="mb-3">
+            <ViewToggle value={viewMode} onChange={setViewMode} />
+          </div>
           <div className="mb-6">
             <DateNavigator
               viewMode={viewMode}
               date={selectedDate}
-              onPrev={() => navigateDate('prev')}
-              onNext={() => navigateDate('next')}
+              onPrev={() => navigateDate("prev")}
+              onNext={() => navigateDate("next")}
             />
           </div>
 
-          {viewMode === 'daily' ? (
+          {viewMode === "daily" ? (
             <div className="p-4 flex gap-3">
               <div className="flex-1 border border-gray-200 rounded-lg">
-                {loadingReservations ? (
-                  <div className="p-4 text-center text-gray-500">Loading reservations...</div>
+                {loading ? (
+                  <div className="p-4 text-center text-gray-500">
+                    Loading reservations...
+                  </div>
                 ) : (
-                  <DailyviewList reservations={reservations} selectedDate={selectedDate} />
+                  <DailyviewList
+                    reservations={reservations}
+                    selectedDate={selectedDate}
+                  />
                 )}
               </div>
               <div className="flex-[2] border border-gray-200 rounded-lg">
-                {loadingReservations ? (
-                  <div className="p-4 text-center text-gray-500">Loading timeline...</div>
+                {loading ? (
+                  <div className="p-4 text-center text-gray-500">
+                    Loading timeline...
+                  </div>
                 ) : (
-                  <DailyviewTimeline reservations={reservations} selectedDate={selectedDate} />
+                  <DailyviewTimeline
+                    reservations={reservations}
+                    selectedDate={selectedDate}
+                  />
                 )}
               </div>
             </div>
@@ -187,18 +166,21 @@ function AdminReservationComponent() {
               {/* Month availability controls */}
               <div className="mb-4">
                 {monthChecking ? (
-                  <div className="text-sm text-gray-500">Checking {monthLabel}…</div>
+                  <div className="text-sm text-gray-500">
+                    Checking {monthLabel}…
+                  </div>
                 ) : !monthExists ? (
                   <div className="flex items-center justify-between gap-3 p-3 border rounded-lg">
                     <div className="text-sm text-gray-700">
-                      No availability found for {monthLabel}. Open reservations for this month?
+                      No availability found for {monthLabel}. Open reservations
+                      for this month?
                     </div>
                     <button
                       onClick={handleOpenMonth}
                       className="px-3 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50"
                       disabled={seeding}
                     >
-                      {seeding ? 'Opening…' : `Open ${monthLabel}`}
+                      {seeding ? "Opening…" : `Open ${monthLabel}`}
                     </button>
                   </div>
                 ) : seedResult?.created >= 0 ? (
@@ -212,11 +194,13 @@ function AdminReservationComponent() {
               </div>
 
               {/* Calendar */}
-              {loadingMetrics ? (
-                <div className="p-4 text-center text-gray-500">Loading calendar...</div>
+              {loading ? (
+                <div className="p-4 text-center text-gray-500">
+                  Loading calendar...
+                </div>
               ) : (
-                <MonthlyView 
-                  selectedDate={selectedDate} 
+                <MonthlyView
+                  selectedDate={selectedDate}
                   onSelectDate={handleMonthDateSelect}
                   metricsByDate={monthlyMetrics}
                 />
@@ -228,4 +212,5 @@ function AdminReservationComponent() {
     </div>
   );
 }
+
 export default AdminReservationComponent;

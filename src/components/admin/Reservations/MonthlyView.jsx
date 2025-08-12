@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 
 // Minimal semicircle graph for a day cell
 function MiniSemiDonut({
@@ -26,8 +26,18 @@ function MiniSemiDonut({
   const avlDash = avlP * circumference;
 
   return (
-    <svg width={size} height={size * 0.65} viewBox={`0 0 ${size} ${size * 0.65}`}>
-      <path d={path} fill="none" stroke="#eef2f7" strokeWidth={stroke} strokeLinecap="round" />
+    <svg
+      width={size}
+      height={size * 0.65}
+      viewBox={`0 0 ${size} ${size * 0.65}`}
+    >
+      <path
+        d={path}
+        fill="none"
+        stroke="#eef2f7"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+      />
       {t > 0 && (
         <>
           <path
@@ -91,7 +101,11 @@ function iso(d) {
   return d.toISOString().slice(0, 10);
 }
 
-export default function MonthlyView({ selectedDate = new Date(), metricsByDate = {}, onSelectDate }) {
+export default function MonthlyView({
+  selectedDate = new Date(),
+  metricsByDate = {},
+  onSelectDate,
+}) {
   const month = selectedDate.getMonth();
   const year = selectedDate.getFullYear();
 
@@ -108,14 +122,16 @@ export default function MonthlyView({ selectedDate = new Date(), metricsByDate =
     return arr;
   }, [selectedDate]);
 
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
     <div className="p-3">
       {/* Weekday header */}
       <div className="grid grid-cols-7 gap-2 mb-2 text-[11px] text-gray-500">
         {weekDays.map((w) => (
-          <div key={w} className="text-center">{w}</div>
+          <div key={w} className="text-center">
+            {w}
+          </div>
         ))}
       </div>
 
@@ -137,14 +153,19 @@ export default function MonthlyView({ selectedDate = new Date(), metricsByDate =
               tabIndex={0}
               onClick={() => onSelectDate && onSelectDate(new Date(d))}
               onKeyDown={(e) => {
-                if ((e.key === 'Enter' || e.key === ' ') && onSelectDate) onSelectDate(new Date(d));
+                if ((e.key === "Enter" || e.key === " ") && onSelectDate)
+                  onSelectDate(new Date(d));
               }}
               className={`rounded-lg border p-2 flex flex-col items-center justify-between bg-white cursor-pointer hover:bg-gray-50
-                ${inMonth ? 'border-gray-200' : 'border-gray-100 bg-gray-50'}
-                ${isToday ? 'ring-2 ring-gray-900 ring-offset-1' : ''}`}
+                ${inMonth ? "border-gray-200" : "border-gray-100 bg-gray-50"}
+                ${isToday ? "ring-2 ring-gray-900 ring-offset-1" : ""}`}
               style={{ minHeight: 84 }}
             >
-              <div className={`text-xs ${inMonth ? 'text-gray-700' : 'text-gray-400'}`}>
+              <div
+                className={`text-xs ${
+                  inMonth ? "text-gray-700" : "text-gray-400"
+                }`}
+              >
                 {d.getDate()}
               </div>
 

@@ -1,11 +1,18 @@
-import React from 'react';
+import React from "react";
 
-export default function MiniSemiDonut({ total, reserved, pending, available, size = 44, stroke = 6 }) {
+export default function MiniSemiDonut({
+  total,
+  reserved,
+  pending,
+  available,
+  size = 44,
+  stroke = 6,
+}) {
   if (total === 0) return <div className="text-xs text-gray-400">No slots</div>;
 
   const radius = (size - stroke) / 2;
   const circumference = Math.PI * radius;
-  
+
   const reservedPercent = total > 0 ? reserved / total : 0;
   const pendingPercent = total > 0 ? pending / total : 0;
   const availablePercent = total > 0 ? available / total : 0;
@@ -29,7 +36,7 @@ export default function MiniSemiDonut({ total, reserved, pending, available, siz
           strokeDashoffset={circumference / 2}
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
-        
+
         {/* Reserved (red) */}
         {reserved > 0 && (
           <circle
@@ -44,7 +51,7 @@ export default function MiniSemiDonut({ total, reserved, pending, available, siz
             transform={`rotate(-90 ${size / 2} ${size / 2})`}
           />
         )}
-        
+
         {/* Pending (yellow) */}
         {pending > 0 && (
           <circle
@@ -55,11 +62,11 @@ export default function MiniSemiDonut({ total, reserved, pending, available, siz
             stroke="var(--color-pending)"
             strokeWidth={stroke}
             strokeDasharray={`${pendingArc} ${circumference}`}
-            strokeDashoffset={(circumference / 2) + reservedArc}
+            strokeDashoffset={circumference / 2 + reservedArc}
             transform={`rotate(-90 ${size / 2} ${size / 2})`}
           />
         )}
-        
+
         {/* Available (green) */}
         {available > 0 && (
           <circle
@@ -70,12 +77,12 @@ export default function MiniSemiDonut({ total, reserved, pending, available, siz
             stroke="var(--color-available)"
             strokeWidth={stroke}
             strokeDasharray={`${availableArc} ${circumference}`}
-            strokeDashoffset={(circumference / 2) + reservedArc + pendingArc}
+            strokeDashoffset={circumference / 2 + reservedArc + pendingArc}
             transform={`rotate(-90 ${size / 2} ${size / 2})`}
           />
         )}
       </svg>
-      
+
       {/* Center text */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-[10px] text-gray-600 font-medium">

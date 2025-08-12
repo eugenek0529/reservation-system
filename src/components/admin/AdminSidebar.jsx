@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import '../../styles/AdminSidebar.css';
+import "../../styles/AdminSidebar.css";
 
 function AdminSidebar({ expanded, onToggle }) {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ function AdminSidebar({ expanded, onToggle }) {
   };
 
   return (
-    <div className={`admin-sidebar ${expanded ? 'expanded' : 'collapsed'}`}>
+    <div className={`admin-sidebar ${expanded ? "expanded" : "collapsed"}`}>
       {/* Header with toggle button */}
       <div className="sidebar-header">
         <div className="header-content">
@@ -23,7 +23,7 @@ function AdminSidebar({ expanded, onToggle }) {
             <h3>Navigation</h3>
             <p>Manage your restaurant</p>
           </div>
-          <button 
+          <button
             className="sidebar-toggle"
             onClick={onToggle}
             title={expanded ? "Collapse sidebar" : "Expand sidebar"}
@@ -49,7 +49,7 @@ function AdminSidebar({ expanded, onToggle }) {
       {/* Separate toggle button for collapsed state */}
       {!expanded && (
         <div className="collapsed-toggle-container">
-          <button 
+          <button
             className="sidebar-toggle collapsed-toggle"
             onClick={onToggle}
             title="Expand sidebar"
@@ -71,7 +71,7 @@ function AdminSidebar({ expanded, onToggle }) {
           </button>
         </div>
       )}
-      
+
       <ul className="nav nav-pills flex-column mb-auto">
         <li className="nav-item">
           <button
@@ -100,7 +100,9 @@ function AdminSidebar({ expanded, onToggle }) {
         </li>
         <li>
           <button
-            className={`nav-link flex ${isActive("/admin/reservations") ? "active" : ""}`}
+            className={`nav-link flex ${
+              isActive("/admin/reservations") ? "active" : ""
+            }`}
             onClick={() => navigate("/admin/reservations")}
             title={!expanded ? "Reservations" : ""}
           >
@@ -125,7 +127,9 @@ function AdminSidebar({ expanded, onToggle }) {
         </li>
         <li>
           <button
-            className={`nav-link flex ${isActive("/admin/customers") ? "active" : ""}`}
+            className={`nav-link flex ${
+              isActive("/admin/customers") ? "active" : ""
+            }`}
             onClick={() => navigate("/admin/customers")}
             title={!expanded ? "Customers" : ""}
           >
@@ -150,7 +154,9 @@ function AdminSidebar({ expanded, onToggle }) {
         </li>
         <li>
           <button
-            className={`nav-link flex ${isActive("/admin/types") ? "active" : ""}`}
+            className={`nav-link flex ${
+              isActive("/admin/types") ? "active" : ""
+            }`}
             onClick={() => navigate("/admin/types")}
             title={!expanded ? "Types" : ""}
           >
@@ -174,7 +180,9 @@ function AdminSidebar({ expanded, onToggle }) {
         </li>
         <li>
           <button
-            className={`nav-link flex ${isActive("/admin/settings") ? "active" : ""}`}
+            className={`nav-link flex ${
+              isActive("/admin/settings") ? "active" : ""
+            }`}
             onClick={() => navigate("/admin/settings")}
             title={!expanded ? "Settings" : ""}
           >

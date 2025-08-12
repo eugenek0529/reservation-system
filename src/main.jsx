@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { AuthProvider } from "./context/AuthProvider.jsx";
+import { AdminReservationProvider } from "./context/AdminReservationContext.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 
 import App from "./App.jsx";
@@ -26,7 +27,9 @@ const router = createBrowserRouter([
     path: "/admin",
     element: (
       <ProtectedRoute allowedRoles={["admin"]} redirectedTo="/">
-        <AdminDashboard />
+        <AdminReservationProvider>
+          <AdminDashboard />
+        </AdminReservationProvider>
       </ProtectedRoute>
     ),
   },
@@ -34,7 +37,9 @@ const router = createBrowserRouter([
     path: "/admin/reservations",
     element: (
       <ProtectedRoute allowedRoles={["admin"]} redirectedTo="/">
-        <AdminReservation />
+        <AdminReservationProvider>
+          <AdminReservation />
+        </AdminReservationProvider>
       </ProtectedRoute>
     ),
   },
@@ -42,7 +47,9 @@ const router = createBrowserRouter([
     path: "/admin/customers",
     element: (
       <ProtectedRoute allowedRoles={["admin"]} redirectedTo="/">
-        <AdminCustomers />
+        <AdminReservationProvider>
+          <AdminCustomers />
+        </AdminReservationProvider>
       </ProtectedRoute>
     ),
   },
@@ -50,7 +57,9 @@ const router = createBrowserRouter([
     path: "/admin/types",
     element: (
       <ProtectedRoute allowedRoles={["admin"]} redirectedTo="/">
-        <AdminTypes />
+        <AdminReservationProvider>
+          <AdminTypes />
+        </AdminReservationProvider>
       </ProtectedRoute>
     ),
   },
@@ -58,7 +67,9 @@ const router = createBrowserRouter([
     path: "/admin/settings",
     element: (
       <ProtectedRoute allowedRoles={["admin"]} redirectedTo="/">
-        <AdminSetting />
+        <AdminReservationProvider>
+          <AdminSetting />
+        </AdminReservationProvider>
       </ProtectedRoute>
     ),
   },

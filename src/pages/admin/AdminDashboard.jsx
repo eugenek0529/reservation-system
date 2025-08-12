@@ -8,10 +8,7 @@ function AdminDashboard() {
 
   return (
     <div>
-    
-
       <AdminLayout>
-        
         <AdminDashboardComponent />
       </AdminLayout>
     </div>

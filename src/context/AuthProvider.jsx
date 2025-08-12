@@ -13,12 +13,13 @@ export const AuthProvider = ({ children }) => {
   // Helper function to get user role from JWT
   const getUserRole = (session) => {
     if (!session?.user) return null;
-    
+
     // Check if user has admin role in JWT claims
-    const userRole = session.user.user_metadata?.role || session.user.app_metadata?.role;
-    
+    const userRole =
+      session.user.user_metadata?.role || session.user.app_metadata?.role;
+
     // If no role is set, default to 'user'
-    return userRole || 'user';
+    return userRole || "user";
   };
 
   // 3. fetch session and subscribe to auth state changes
@@ -27,11 +28,11 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.getSession();
       const currentSession = data?.session || null;
       setSession(currentSession);
-      
+
       // Set user role
       const role = getUserRole(currentSession);
       setUserRole(role);
-      
+
       setLoading(false);
       if (error) {
         console.error("Error fetching session from AuthContext:", error);
@@ -81,8 +82,27 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  const signUp = async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+  const signUp = async (email, password, name, phone) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name: name,
+          phone: phone,
+        },
+      },
+    });
+
+    if (data.user) {
+      await supabase.from("user_profiles").insert({
+        id: data.user.id,
+        name,
+        email,
+        phone,
+      });
+    }
+
     if (error) {
       console.error("Error signing up:", error);
       throw error;
@@ -98,6 +118,7 @@ export const AuthProvider = ({ children }) => {
         redirectTo: window.location.origin,
       },
     });
+
     if (error) {
       console.error("Error signing up with Google:", error);
       throw error;
@@ -148,11 +169,11 @@ export const AuthProvider = ({ children }) => {
       console.error("Error signing in:", error);
       throw error;
     }
-    
+
     // Get the role after successful login
     const role = getUserRole(data.session);
     setUserRole(role);
-    
+
     console.log(`Sign in successful:`, data);
     return { data, role };
   };
@@ -171,14 +192,14 @@ export const AuthProvider = ({ children }) => {
   // 4. provide the session, loading state, and user role to children
   return (
     <AuthContext.Provider
-      value={{ 
-        session, 
-        loading, 
-        userRole, 
-        signUp, 
-        signIn, 
-        signOut, 
-        signInWithOAuth 
+      value={{
+        session,
+        loading,
+        userRole,
+        signUp,
+        signIn,
+        signOut,
+        signInWithOAuth,
       }}
     >
       {children}
