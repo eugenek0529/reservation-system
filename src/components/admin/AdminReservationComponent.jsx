@@ -10,7 +10,12 @@ import { ReservationAvailabilityAPI } from '../../api';
 function AdminReservationComponent() {
   const [viewMode, setViewMode] = useState('daily');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const reservations = useMemo(() => mockReservations, []);
+  
+  // Replace mock data with real data state
+  const [reservations, setReservations] = useState([]);
+  const [monthlyMetrics, setMonthlyMetrics] = useState({});
+  const [loadingReservations, setLoadingReservations] = useState(false);
+  const [loadingMetrics, setLoadingMetrics] = useState(false);
 
   // Monthly availability state
   const [monthChecking, setMonthChecking] = useState(false);
@@ -50,6 +55,69 @@ function AdminReservationComponent() {
       .then(exists => { if (!cancelled) setMonthExists(Boolean(exists)); })
       .catch(e => { if (!cancelled) setMonthError(e?.message || 'Failed to check month'); })
       .finally(() => { if (!cancelled) setMonthChecking(false); });
+    return () => { cancelled = true; };
+  }, [viewMode, monthStartISO]);
+
+  // Fetch daily reservations when date changes
+  useEffect(() => {
+    if (viewMode !== 'daily') return;
+    
+    let cancelled = false;
+    setLoadingReservations(true);
+    
+    const dateISO = selectedDate.toISOString().slice(0, 10);
+    ReservationAvailabilityAPI.getDailyReservations(dateISO)
+      .then(data => {
+        if (!cancelled) setReservations(data);
+      })
+      .catch(e => {
+        if (!cancelled) console.error('Failed to fetch reservations:', e);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingReservations(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [viewMode, selectedDate]);
+
+  // Fetch monthly metrics when monthly view is active
+  useEffect(() => {
+    if (viewMode !== 'monthly') return;
+    
+    let cancelled = false;
+    setLoadingMetrics(true);
+    
+    ReservationAvailabilityAPI.getMonthlyMetrics(monthStartISO)
+      .then(data => {
+        if (!cancelled) {
+          // Group by date and calculate totals correctly
+          const metrics = {};
+          data.forEach(item => {
+            const dateKey = item.available_date;
+            if (!metrics[dateKey]) {
+              metrics[dateKey] = { total: 0, reserved: 0, pending: 0, available: 0 };
+            }
+            const maxCap = item.reservation_slot?.max_capacity || 0;
+            metrics[dateKey].total += maxCap;
+            metrics[dateKey].reserved += item.current_capacity || 0;
+            metrics[dateKey].pending += item.pending || 0;
+          });
+          
+          // Calculate available after summing all slots
+          Object.keys(metrics).forEach(dateKey => {
+            metrics[dateKey].available = Math.max(0, metrics[dateKey].total - metrics[dateKey].reserved - metrics[dateKey].pending);
+          });
+          
+          setMonthlyMetrics(metrics);
+        }
+      })
+      .catch(e => {
+        if (!cancelled) console.error('Failed to fetch monthly metrics:', e);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingMetrics(false);
+      });
+
     return () => { cancelled = true; };
   }, [viewMode, monthStartISO]);
 
@@ -100,10 +168,18 @@ function AdminReservationComponent() {
           {viewMode === 'daily' ? (
             <div className="p-4 flex gap-3">
               <div className="flex-1 border border-gray-200 rounded-lg">
-                <DailyviewList reservations={reservations} selectedDate={selectedDate} />
+                {loadingReservations ? (
+                  <div className="p-4 text-center text-gray-500">Loading reservations...</div>
+                ) : (
+                  <DailyviewList reservations={reservations} selectedDate={selectedDate} />
+                )}
               </div>
               <div className="flex-[2] border border-gray-200 rounded-lg">
-                <DailyviewTimeline reservations={reservations} selectedDate={selectedDate} />
+                {loadingReservations ? (
+                  <div className="p-4 text-center text-gray-500">Loading timeline...</div>
+                ) : (
+                  <DailyviewTimeline reservations={reservations} selectedDate={selectedDate} />
+                )}
               </div>
             </div>
           ) : (
@@ -136,7 +212,15 @@ function AdminReservationComponent() {
               </div>
 
               {/* Calendar */}
-              <MonthlyView selectedDate={selectedDate} onSelectDate={handleMonthDateSelect} />
+              {loadingMetrics ? (
+                <div className="p-4 text-center text-gray-500">Loading calendar...</div>
+              ) : (
+                <MonthlyView 
+                  selectedDate={selectedDate} 
+                  onSelectDate={handleMonthDateSelect}
+                  metricsByDate={monthlyMetrics}
+                />
+              )}
             </div>
           )}
         </div>

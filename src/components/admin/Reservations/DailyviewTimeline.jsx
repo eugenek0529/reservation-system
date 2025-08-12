@@ -6,8 +6,9 @@ const defaultSlots = [
   { key: 'dinner2', label: '8:00 PM',  startMin: 19 * 60 + 30, endMin: 20 * 60 + 30, max: 8 },
 ];
 
-const toMinutes = (hhmm) => {
-  const [h, m] = hhmm.split(':').map(Number);
+const toMinutes = (timeString) => {
+  if (!timeString) return 0; // Handle undefined/null time
+  const [h, m] = timeString.split(':').map(Number);
   return (h % 24) * 60 + (m || 0);
 };
 
@@ -19,7 +20,7 @@ function DailyviewTimeline({ reservations = [], slots = defaultSlots }) {
   const grouped = useMemo(() => {
     return slots.map(slot => {
       const inSlot = reservations.filter(r => {
-        const mins = toMinutes(r.time);
+        const mins = toMinutes(r.reservationTime); // Changed from r.time
         return mins >= slot.startMin && mins < slot.endMin;
       });
       const confirmed = inSlot.filter(r => r.status === 'confirmed');
@@ -29,9 +30,24 @@ function DailyviewTimeline({ reservations = [], slots = defaultSlots }) {
 
       // make vertical stack items (order: confirmed → pending → open)
       const stack = [
-        ...confirmed.map(r => ({ id: r.id, type: 'reserved', label: String(r.guests), title: `${r.name} • ${r.guests} guests • ${r.time}` })),
-        ...pending.map((r, i) => ({ id: `${r.id}-p${i}`, type: 'pending', label: String(r.guests), title: `Pending • ${r.name} • ${r.guests} guests • ${r.time}` })),
-        ...Array.from({ length: openCount }).map((_, i) => ({ id: `open-${slot.key}-${i}`, type: 'open', label: '+', title: 'Open spot' })),
+        ...confirmed.map(r => ({ 
+          id: r.id, 
+          type: 'reserved', 
+          label: String(r.guestCount), // Changed from r.guests
+          title: `${r.guestName} • ${r.guestCount} guests • ${r.reservationTime}` // Changed from r.name and r.time
+        })),
+        ...pending.map((r, i) => ({ 
+          id: `${r.id}-p${i}`, 
+          type: 'pending', 
+          label: String(r.guestCount), // Changed from r.guests
+          title: `Pending • ${r.guestName} • ${r.guestCount} guests • ${r.reservationTime}` // Changed from r.name and r.time
+        })),
+        ...Array.from({ length: openCount }).map((_, i) => ({ 
+          id: `open-${slot.key}-${i}`, 
+          type: 'open', 
+          label: '+', 
+          title: 'Open spot' 
+        })),
       ];
 
       return { ...slot, confirmed, pending, openCount, stack };

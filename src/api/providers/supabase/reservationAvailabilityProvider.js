@@ -14,3 +14,65 @@ export async function seedMonthBackend(monthStartISO) {
   if (error) throw new ApiError('seedMonthAvailability failed', { code: error.code, details: error });
   return { created: Number(data) || 0 };
 }
+
+export async function getMonthlyMetricsBackend(monthISO) {
+  const { data, error } = await supabase
+    .from('reservation_availability')
+    .select(`
+      available_date,
+      current_capacity,
+      pending,
+      reservation_slot:reservation_slot_id(max_capacity)
+    `)
+    .gte('available_date', monthISO)
+    .lt('available_date', getNextMonth(monthISO))
+    .eq('reservation_slot.is_active', true);
+
+  if (error) throw new ApiError('getMonthlyMetrics failed', { code: error.code, details: error });
+  return data;
+}
+
+export async function getDailyReservationsBackend(dateISO) {
+  // Get reservations for the specific date with all the data we need
+  const { data, error } = await supabase
+    .from('reservations')
+    .select(`
+      id,
+      guest_count,
+      special_requirements,
+      status,
+      user_profile:user_id(name),
+      reservation_availability:reservation_availability_id(
+        available_date,
+        reservation_slot:reservation_slot_id(
+          max_capacity,
+          time_slot:time_slot_id(start_time)
+        )
+      )
+    `)
+    .eq('reservation_availability.available_date', dateISO);
+
+  if (error) throw new ApiError('getDailyReservations failed', { code: error.code, details: error });
+  
+  console.log('Raw reservations data for date:', dateISO, data); // Debug log
+  
+  // Transform the data to match what the UI components expect
+  const transformedData = data?.map(reservation => ({
+    id: reservation.id,
+    guestName: reservation.user_profile?.name || 'Unknown',
+    guestCount: reservation.guest_count || 0,
+    note: reservation.special_requirements || '',
+    reservationTime: reservation.reservation_availability?.reservation_slot?.time_slot?.start_time || '',
+    status: reservation.status || 'pending',
+    reservationType: 'Unknown' // We can add this later if needed
+  })) || [];
+  
+  console.log('Transformed data:', transformedData); // Debug log
+  return transformedData;
+}
+
+function getNextMonth(monthISO) {
+  const date = new Date(monthISO);
+  date.setMonth(date.getMonth() + 1);
+  return date.toISOString().slice(0, 10);
+}
