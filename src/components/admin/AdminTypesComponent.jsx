@@ -30,7 +30,8 @@ function AdminTypesComponent() {
     setSaving(true);
     setError("");
     try {
-      await ReservationTypeAPI.createReservationType(form);
+      // Use the new API method
+      await ReservationTypeAPI.createReservationTypeWithSchedule(form);
       setShowForm(false);
       await loadTypes();
     } catch (e) {
@@ -41,7 +42,12 @@ function AdminTypesComponent() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm("Delete this type?")) return;
+    if (
+      !window.confirm(
+        "Delete this type? This will also delete associated schedules and cannot be undone."
+      )
+    )
+      return;
     try {
       await ReservationTypeAPI.deleteReservationType(id);
       await loadTypes();
@@ -55,7 +61,9 @@ function AdminTypesComponent() {
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Types</h1>
-          <p className="text-sm text-gray-500">Manage reservation types</p>
+          <p className="text-sm text-gray-500">
+            Manage reservation types and their weekly schedules
+          </p>
         </div>
         <button
           onClick={() => setShowForm(true)}
