@@ -78,6 +78,21 @@ export async function getDailyReservationsBackend(dateISO) {
   return data || [];
 }
 
+export async function getDailyScheduleBackend(dateISO) {
+  const { data, error } = await supabase.rpc("get_daily_schedule", {
+    p_date: dateISO,
+  });
+
+  if (error) {
+    throw new ApiError("getDailySchedule failed", {
+      code: error.code,
+      details: error,
+    });
+  }
+  // The data is already in a great JSON format, so we can return it directly.
+  return data;
+}
+
 function getNextMonth(monthISO) {
   const date = new Date(monthISO);
   date.setMonth(date.getMonth() + 1);

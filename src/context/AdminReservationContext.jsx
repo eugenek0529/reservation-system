@@ -5,34 +5,37 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { ReservationAvailabilityAPI } from "../api";
+import { ReservationAvailabilityAPI } from "../api/reservationAvailabilityAPI";
+import { toLocalISOString } from "../utils/dateUtils";
 
 const AdminReservationContext = createContext();
 
 export function AdminReservationProvider({ children }) {
-  const [reservations, setReservations] = useState([]);
+  const [dailySchedule, setDailySchedule] = useState([]);
   const [monthlyMetrics, setMonthlyMetrics] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({ schedule: true, metrics: true });
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [error, setError] = useState(null);
 
-  // Fetch daily reservations for a specific date
-  const fetchDailyReservations = useCallback(async (dateISO) => {
+  const fetchDailySchedule = useCallback(async (date) => {
+    setLoading((prev) => ({ ...prev, schedule: true }));
+    setError(null);
     try {
-      setLoading(true);
-      const data = await ReservationAvailabilityAPI.getDailyReservations(
-        dateISO
+      const scheduleData = await ReservationAvailabilityAPI.getDailySchedule(
+        toLocalISOString(date)
       );
-      setReservations(data);
+      setDailySchedule(scheduleData);
     } catch (error) {
-      console.error("Failed to fetch daily reservations:", error);
-      setReservations([]);
+      setError(error.message);
+      setDailySchedule([]);
     } finally {
-      setLoading(false);
+      setLoading((prev) => ({ ...prev, schedule: false }));
     }
   }, []);
 
   // Fetch monthly metrics
   const fetchMonthlyMetrics = useCallback(async (monthISO) => {
+    setLoading((prev) => ({ ...prev, metrics: true }));
     try {
       const data = await ReservationAvailabilityAPI.getMonthlyMetrics(monthISO);
 
@@ -68,46 +71,35 @@ export function AdminReservationProvider({ children }) {
     } catch (error) {
       console.error("Failed to fetch monthly metrics:", error);
       setMonthlyMetrics({});
+    } finally {
+      setLoading((prev) => ({ ...prev, metrics: false }));
     }
   }, []);
 
   // Refresh data when date changes
   useEffect(() => {
-    const dateISO = selectedDate.toISOString().slice(0, 10);
-    fetchDailyReservations(dateISO);
-  }, [selectedDate, fetchDailyReservations]);
-
-  // Refresh monthly metrics when needed
-  const refreshMonthlyMetrics = useCallback(
-    (monthISO) => {
-      fetchMonthlyMetrics(monthISO);
-    },
-    [fetchMonthlyMetrics]
-  );
-
-  // Add new reservation (this would be called after creating a reservation)
-  const addReservation = useCallback(
-    (newReservation) => {
-      setReservations((prev) => [...prev, newReservation]);
-
-      // Also refresh monthly metrics to update the calendar
-      const monthISO =
-        selectedDate.toISOString().slice(0, 10).substring(0, 7) + "-01";
-      fetchMonthlyMetrics(monthISO);
-    },
-    [selectedDate, fetchMonthlyMetrics]
-  );
+    fetchDailySchedule(selectedDate);
+  }, [selectedDate, fetchDailySchedule]);
 
   const value = {
-    reservations,
-    monthlyMetrics,
-    loading,
     selectedDate,
     setSelectedDate,
-    fetchDailyReservations,
-    fetchMonthlyMetrics,
-    refreshMonthlyMetrics,
-    addReservation,
+    dailySchedule,
+    monthlyMetrics,
+    loading: loading.schedule, // Expose a simpler loading state for the schedule
+    loadingMetrics: loading.metrics,
+    error,
+    refreshDailySchedule: () => fetchDailySchedule(selectedDate),
+    refreshMonthlyMetrics: (monthISO) => {
+      // You might want to pass the date from the calendar component here
+      const dateForMetrics = monthISO ? new Date(monthISO) : selectedDate;
+      const startOfMonth = new Date(
+        dateForMetrics.getFullYear(),
+        dateForMetrics.getMonth(),
+        1
+      );
+      fetchMonthlyMetrics(toLocalISOString(startOfMonth));
+    },
   };
 
   return (

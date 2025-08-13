@@ -4,21 +4,34 @@ import DailyviewTimeline from "./Reservations/DailyviewTimeline";
 import MonthlyView from "./Reservations/MonthlyView";
 import ViewToggle from "./Reservations/ViewToggle";
 import DateNavigator from "./Reservations/DateNavigator";
-import { ReservationAvailabilityAPI } from "../../api";
+import { ReservationAvailabilityAPI } from "../../api/reservationAvailabilityAPI";
 import { useAdminReservations } from "../../context/AdminReservationContext";
+import { toLocalISOString } from "../../utils/dateUtils";
 
 function AdminReservationComponent() {
   const [viewMode, setViewMode] = useState("daily");
 
   // Use context instead of local state
   const {
-    reservations,
+    dailySchedule,
     monthlyMetrics,
     loading,
     selectedDate,
     setSelectedDate,
     fetchMonthlyMetrics,
   } = useAdminReservations();
+
+  // Create a flattened list of all reservations for the list view
+  const allReservations = useMemo(
+    () =>
+      dailySchedule.flatMap((slot) =>
+        slot.reservations.map((res) => ({
+          ...res,
+          reservationTime: slot.startTime, // Add startTime for sorting/display in the list
+        }))
+      ),
+    [dailySchedule]
+  );
 
   // Monthly availability state (keep this local)
   const [monthChecking, setMonthChecking] = useState(false);
@@ -41,7 +54,7 @@ function AdminReservationComponent() {
   const monthStartISO = useMemo(() => {
     const d = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
     d.setHours(0, 0, 0, 0);
-    return d.toISOString().slice(0, 10); // YYYY-MM-01
+    return toLocalISOString(d); // YYYY-MM-01
   }, [selectedDate]);
 
   const monthLabel = useMemo(
@@ -143,7 +156,7 @@ function AdminReservationComponent() {
                   </div>
                 ) : (
                   <DailyviewList
-                    reservations={reservations}
+                    reservations={allReservations}
                     selectedDate={selectedDate}
                   />
                 )}
@@ -155,7 +168,7 @@ function AdminReservationComponent() {
                   </div>
                 ) : (
                   <DailyviewTimeline
-                    reservations={reservations}
+                    schedule={dailySchedule}
                     selectedDate={selectedDate}
                   />
                 )}

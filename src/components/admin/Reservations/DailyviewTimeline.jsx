@@ -1,51 +1,21 @@
 import React, { useMemo } from "react";
 
-const defaultSlots = [
-  {
-    key: "lunch",
-    label: "12:00 PM",
-    startMin: 11 * 60 + 45,
-    endMin: 12 * 60 + 45,
-    max: 8,
-  },
-  {
-    key: "dinner1",
-    label: "5:30 PM",
-    startMin: 17 * 60 + 0,
-    endMin: 18 * 60 + 0,
-    max: 8,
-  },
-  {
-    key: "dinner2",
-    label: "8:00 PM",
-    startMin: 19 * 60 + 30,
-    endMin: 20 * 60 + 30,
-    max: 8,
-  },
-];
-
-const toMinutes = (timeString) => {
-  if (!timeString) return 0; // Handle undefined/null time
-  const [h, m] = timeString.split(":").map(Number);
-  return (h % 24) * 60 + (m || 0);
-};
-
 const BOX =
   "w-12 h-14 md:w-14 md:h-16 rounded-lg shadow-sm ring-1 grid place-items-center text-xs font-medium";
 const BADGE = "text-[10px] leading-none tracking-wide mt-0.5";
 
-function DailyviewTimeline({ reservations = [], slots = defaultSlots }) {
-  // bucket reservations by slot window
-  const grouped = useMemo(() => {
-    return slots.map((slot) => {
-      const inSlot = reservations.filter((r) => {
-        const mins = toMinutes(r.reservationTime); // Changed from r.time
-        return mins >= slot.startMin && mins < slot.endMin;
-      });
-      const confirmed = inSlot.filter((r) => r.status === "confirmed");
-      const pending = inSlot.filter((r) => r.status === "pending");
-      const used = confirmed.length + pending.length;
-      const openCount = Math.max(0, (slot.max ?? 0) - used);
+function DailyviewTimeline({ schedule = [] }) {
+  // The component is now much simpler. It just renders the pre-structured data.
+  const timelineSlots = useMemo(() => {
+    return schedule.map((slot) => {
+      const confirmed = slot.reservations.filter(
+        (r) => r.status === "confirmed"
+      );
+      const pending = slot.reservations.filter((r) => r.status === "pending");
+      const openCount = Math.max(
+        0,
+        slot.maxCapacity - slot.reservations.length
+      );
 
       // make vertical stack items (order: confirmed → pending → open)
       const stack = [
@@ -53,25 +23,33 @@ function DailyviewTimeline({ reservations = [], slots = defaultSlots }) {
           id: r.id,
           type: "reserved",
           label: String(r.guestCount), // Changed from r.guests
-          title: `${r.guestName} • ${r.guestCount} guests • ${r.reservationTime}`, // Changed from r.name and r.time
+          title: `${r.guestName} • ${r.guestCount} guests • ${slot.startTime}`,
         })),
         ...pending.map((r, i) => ({
-          id: `${r.id}-p${i}`,
+          id: r.id,
           type: "pending",
           label: String(r.guestCount), // Changed from r.guests
-          title: `Pending • ${r.guestName} • ${r.guestCount} guests • ${r.reservationTime}`, // Changed from r.name and r.time
+          title: `Pending • ${r.guestName} • ${r.guestCount} guests • ${slot.startTime}`,
         })),
         ...Array.from({ length: openCount }).map((_, i) => ({
-          id: `open-${slot.key}-${i}`,
+          id: `open-${slot.reservationSlotId}-${i}`,
           type: "open",
           label: "+",
           title: "Open spot",
         })),
       ];
 
-      return { ...slot, confirmed, pending, openCount, stack };
+      return {
+        key: slot.reservationSlotId,
+        label: slot.startTime,
+        typeName: slot.reservationTypeName,
+        confirmedCount: confirmed.length,
+        pendingCount: pending.length,
+        max: slot.maxCapacity,
+        stack,
+      };
     });
-  }, [reservations, slots]);
+  }, [schedule]);
 
   return (
     <div className="p-4">
@@ -95,21 +73,24 @@ function DailyviewTimeline({ reservations = [], slots = defaultSlots }) {
       <div
         className="grid gap-4"
         style={{
-          gridTemplateColumns: `repeat(${grouped.length}, minmax(120px, 1fr))`,
+          gridTemplateColumns: `repeat(${timelineSlots.length}, minmax(120px, 1fr))`,
         }}
       >
-        {grouped.map((slot) => (
+        {timelineSlots.map((slot) => (
           <div
             key={slot.key}
             className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden"
           >
             {/* header (time label + quick stats) */}
             <div className="px-3 py-2 border-b border-gray-100">
-              <div className="text-sm text-gray-800 text-center">
-                {slot.label}
+              <div className="text-sm font-medium text-gray-800 text-center">
+                {slot.typeName}
+              </div>
+              <div className="text-xs text-gray-500 text-center">
+                ({slot.label})
               </div>
               <div className="text-[11px] text-gray-500 text-center mt-0.5">
-                {slot.confirmed.length + slot.pending.length}/{slot.max}
+                {slot.confirmedCount + slot.pendingCount}/{slot.max}
               </div>
             </div>
 
