@@ -8,29 +8,26 @@ function DailyviewTimeline({ schedule = [] }) {
   // The component is now much simpler. It just renders the pre-structured data.
   const timelineSlots = useMemo(() => {
     return schedule.map((slot) => {
-      const confirmed = slot.reservations.filter(
-        (r) => r.status === "confirmed"
-      );
+      // Since status is always "reserved" unless admin sets "pending"
+      const reserved = slot.reservations.filter((r) => r.status === "reserved");
       const pending = slot.reservations.filter((r) => r.status === "pending");
+      
+      // Fix: Use currentCapacity instead of reservations.length for accurate count
       const openCount = Math.max(
         0,
-        slot.maxCapacity - slot.reservations.length
+        slot.maxCapacity - slot.currentCapacity
       );
 
-      // make vertical stack items (order: confirmed → pending → open)
+      // make vertical stack items (order: reserved → pending → open)
       const stack = [
-        ...confirmed.map((r) => ({
+        // Show ALL reservations from the array
+        ...slot.reservations.map((r) => ({
           id: r.id,
-          type: "reserved",
-          label: String(r.guestCount), // Changed from r.guests
+          type: r.status === "pending" ? "pending" : "reserved", // Default to reserved
+          label: String(r.guestCount),
           title: `${r.guestName} • ${r.guestCount} guests • ${slot.startTime}`,
         })),
-        ...pending.map((r, i) => ({
-          id: r.id,
-          type: "pending",
-          label: String(r.guestCount), // Changed from r.guests
-          title: `Pending • ${r.guestName} • ${r.guestCount} guests • ${slot.startTime}`,
-        })),
+        // Add open slots after reservations
         ...Array.from({ length: openCount }).map((_, i) => ({
           id: `open-${slot.reservationSlotId}-${i}`,
           type: "open",
@@ -43,7 +40,7 @@ function DailyviewTimeline({ schedule = [] }) {
         key: slot.reservationSlotId,
         label: slot.startTime,
         typeName: slot.reservationTypeName,
-        confirmedCount: confirmed.length,
+        reservedCount: reserved.length,
         pendingCount: pending.length,
         max: slot.maxCapacity,
         stack,
@@ -60,7 +57,7 @@ function DailyviewTimeline({ schedule = [] }) {
           Reserved
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block w-3.5 h-3.5 rounded bg-amber-300 ring-1 ring-amber-500/60" />
+          <span className="inline-block w-3.5 h-3.5 rounded bg-amber-300 ring-amber-500/60" />
           Pending/Hold
         </div>
         <div className="flex items-center gap-2">
@@ -90,7 +87,7 @@ function DailyviewTimeline({ schedule = [] }) {
                 ({slot.label})
               </div>
               <div className="text-[11px] text-gray-500 text-center mt-0.5">
-                {slot.confirmedCount + slot.pendingCount}/{slot.max}
+                {slot.currentCapacity}/{slot.maxCapacity}
               </div>
             </div>
 

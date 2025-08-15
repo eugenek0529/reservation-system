@@ -25,17 +25,9 @@ export function AdminReservationProvider({ children }) {
         toLocalISOString(date)
       );
       
-      // Process the data for timeline visualization
-      const processedSchedule = scheduleData.map(slot => ({
-        ...slot,
-        // Calculate visual representation
-        reservedBoxes: slot.reservations.length, // 1 red box for your 4-guest reservation
-        availableBoxes: slot.maxCapacity - slot.currentCapacity, // 8 green boxes
-        totalBoxes: slot.maxCapacity // 12 total boxes
-      }));
-      
-      console.log('Processed schedule for timeline:', processedSchedule);
-      setDailySchedule(processedSchedule);
+      // Remove the processing - keep original data structure
+      console.log('Daily schedule data structure:', scheduleData);
+      setDailySchedule(scheduleData);
     } catch (error) {
       setError(error.message);
       setDailySchedule([]);
