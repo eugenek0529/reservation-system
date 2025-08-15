@@ -24,7 +24,18 @@ export function AdminReservationProvider({ children }) {
       const scheduleData = await ReservationAvailabilityAPI.getDailySchedule(
         toLocalISOString(date)
       );
-      setDailySchedule(scheduleData);
+      
+      // Process the data for timeline visualization
+      const processedSchedule = scheduleData.map(slot => ({
+        ...slot,
+        // Calculate visual representation
+        reservedBoxes: slot.reservations.length, // 1 red box for your 4-guest reservation
+        availableBoxes: slot.maxCapacity - slot.currentCapacity, // 8 green boxes
+        totalBoxes: slot.maxCapacity // 12 total boxes
+      }));
+      
+      console.log('Processed schedule for timeline:', processedSchedule);
+      setDailySchedule(processedSchedule);
     } catch (error) {
       setError(error.message);
       setDailySchedule([]);
@@ -60,7 +71,7 @@ export function AdminReservationProvider({ children }) {
         // Available seats = total - reserved
         const availableCap = maxCap - reservedCap;
 
-        console.log(`Processing date ${dateKey}: maxCap=${maxCap}, availableCap=${availableCap}, pendingCap=${pendingCap}, reservedCap=${reservedCap}`);
+        // console.log(`Processing date ${dateKey}: maxCap=${maxCap}, availableCap=${availableCap}, pendingCap=${pendingCap}, reservedCap=${reservedCap}`);
 
         metrics[dateKey].total += maxCap;
         metrics[dateKey].reserved += reservedCap;
@@ -68,8 +79,8 @@ export function AdminReservationProvider({ children }) {
         metrics[dateKey].available += availableCap;
       });
 
-      console.log('Final calculated metrics:', metrics);
-      console.log('Dates with data:', Object.keys(metrics));
+      // console.log('Final calculated metrics:', metrics);
+      // console.log('Dates with data:', Object.keys(metrics));
       setMonthlyMetrics(metrics);
     } catch (error) {
       console.error("Failed to fetch monthly metrics:", error);

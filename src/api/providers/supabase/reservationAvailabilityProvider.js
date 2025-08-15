@@ -27,8 +27,8 @@ export async function seedMonthBackend(monthStartISO) {
 }
 
 export async function getMonthlyMetricsBackend(monthStartISO) {
-  console.log('getMonthlyMetricsBackend called with monthStartISO:', monthStartISO);
-  console.log('getNextMonth result:', getNextMonth(monthStartISO));
+  // console.log('getMonthlyMetricsBackend called with monthStartISO:', monthStartISO);
+  // console.log('getNextMonth result:', getNextMonth(monthStartISO));
   
   const { data, error } = await supabase
     .from("reservation_availability")
@@ -36,8 +36,8 @@ export async function getMonthlyMetricsBackend(monthStartISO) {
     .gte("available_date", monthStartISO)
     .lt("available_date", getNextMonth(monthStartISO));
 
-  console.log('Supabase query result - data:', data);
-  console.log('Supabase query result - error:', error);
+  // console.log('Supabase query result - data:', data);
+  // console.log('Supabase query result - error:', error);
 
   if (error)
     throw new ApiError("getMonthlyMetrics failed", {
@@ -61,7 +61,7 @@ export async function getMonthlyMetricsBackend(monthStartISO) {
     })
   );
   
-  console.log('getMonthlyMetricsBackend data:', enrichedData);
+  // console.log('getMonthlyMetricsBackend data:', enrichedData);
   return enrichedData;
 }
 

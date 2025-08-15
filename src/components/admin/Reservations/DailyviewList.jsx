@@ -8,13 +8,7 @@ function DailyviewList({ reservations = [] }) {
       ),
     [reservations]
   );
-  const counts = useMemo(
-    () => ({
-      confirmed: sorted.filter((r) => r.status === "confirmed").length,
-      pending: sorted.filter((r) => r.status === "pending").length,
-    }),
-    [sorted]
-  );
+  
 
   return (
     <div className="p-4">
@@ -23,10 +17,7 @@ function DailyviewList({ reservations = [] }) {
         <h2 className="text-base text-gray-800">
           Today's Reservations ({sorted.length})
         </h2>
-        <div className="mt-1 flex gap-6 text-xs">
-          <span className="text-green-600">{counts.confirmed} Confirmed</span>
-          <span className="text-amber-600">{counts.pending} Pending</span>
-        </div>
+        
       </div>
 
       {/* cards */}
