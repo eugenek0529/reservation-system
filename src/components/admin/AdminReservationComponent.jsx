@@ -16,9 +16,10 @@ function AdminReservationComponent() {
     dailySchedule,
     monthlyMetrics,
     loading,
+    loadingMetrics, // Add this
     selectedDate,
     setSelectedDate,
-    fetchMonthlyMetrics,
+    refreshMonthlyMetrics,
   } = useAdminReservations();
 
   // Create a flattened list of all reservations for the list view
@@ -40,12 +41,25 @@ function AdminReservationComponent() {
   const [seedResult, setSeedResult] = useState(null);
   const [monthError, setMonthError] = useState("");
 
+  // Reset to current month when switching to monthly view
+  useEffect(() => {
+    if (viewMode === "monthly") {
+      setSelectedDate(new Date()); // Reset to current month (August)
+    }
+  }, [viewMode]);
+
   const navigateDate = (dir) => {
     setSelectedDate((prev) => {
       const d = new Date(prev);
       if (viewMode === "daily")
         d.setDate(d.getDate() + (dir === "prev" ? -1 : 1));
-      else d.setMonth(d.getMonth() + (dir === "prev" ? -1 : 1));
+      else {
+        // For monthly view, always stay in current month
+        const currentMonth = new Date();
+        d.setFullYear(currentMonth.getFullYear());
+        d.setMonth(currentMonth.getMonth());
+        d.setDate(1);
+      }
       return d;
     });
   };
@@ -90,8 +104,11 @@ function AdminReservationComponent() {
   // Fetch monthly metrics when monthly view is active
   useEffect(() => {
     if (viewMode !== "monthly") return;
-    fetchMonthlyMetrics(monthStartISO);
-  }, [viewMode, monthStartISO, fetchMonthlyMetrics]);
+    // Always use current month for monthly view, not selectedDate
+    const currentMonth = new Date();
+    const currentMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    refreshMonthlyMetrics(toLocalISOString(currentMonthStart));
+  }, [viewMode, refreshMonthlyMetrics]);
 
   async function handleOpenMonth() {
     try {
@@ -102,8 +119,8 @@ function AdminReservationComponent() {
       );
       setSeedResult(res);
       setMonthExists(true);
-      // Refresh monthly metrics after opening month
-      fetchMonthlyMetrics(monthStartISO);
+      // Refresh monthly metrics after opening the month
+      refreshMonthlyMetrics(monthStartISO);
     } catch (e) {
       setMonthError(e?.message || "Failed to open month");
     } finally {
@@ -207,7 +224,7 @@ function AdminReservationComponent() {
               </div>
 
               {/* Calendar */}
-              {loading ? (
+              {loadingMetrics ? ( // Change from loading to loadingMetrics
                 <div className="p-4 text-center text-gray-500">
                   Loading calendar...
                 </div>

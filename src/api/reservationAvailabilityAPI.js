@@ -16,9 +16,9 @@ export const ReservationAvailabilityAPI = {
   },
 
   // Get monthly availability metrics for calendar display
-  async getMonthlyMetrics(monthISO) {
+  async getMonthlyMetrics(monthStartISO) {
     try {
-      const data = await getMonthlyMetricsBackend(monthISO);
+      const data = await getMonthlyMetricsBackend(monthStartISO);
       return data;
     } catch (error) {
       throw new Error("Failed to fetch monthly metrics: " + error.message);

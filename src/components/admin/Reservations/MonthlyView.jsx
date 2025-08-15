@@ -28,7 +28,7 @@ function MiniSemiDonut({
   return (
     <svg
       width={size}
-      height={size * 0.65}
+      height={size}
       viewBox={`0 0 ${size} ${size * 0.65}`}
     >
       <path
@@ -108,6 +108,9 @@ export default function MonthlyView({
 }) {
   const month = selectedDate.getMonth();
   const year = selectedDate.getFullYear();
+
+  // Keep only essential debugging
+  console.log('MonthlyView metricsByDate:', metricsByDate);
 
   // Build 6-week grid (Sun-Sat)
   const days = useMemo(() => {

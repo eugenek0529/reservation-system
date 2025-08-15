@@ -2,11 +2,12 @@ import { supabase } from "../../../supabase/supabaseClient";
 import { ApiError } from "../../errors";
 
 export async function monthExistsBackend(monthStartISO) {
+  // This function checks if the month of reservation availability is already seeded
   const { data, error } = await supabase.rpc("month_availability_exists", {
     p_month: monthStartISO,
   });
   if (error)
-    throw new ApiError("monthAvailabilityExists failed", {
+    throw new ApiError("monthExistsBackend failed", {
       code: error.code,
       details: error,
     });
@@ -25,27 +26,43 @@ export async function seedMonthBackend(monthStartISO) {
   return { created: Number(data) || 0 };
 }
 
-export async function getMonthlyMetricsBackend(monthISO) {
+export async function getMonthlyMetricsBackend(monthStartISO) {
+  console.log('getMonthlyMetricsBackend called with monthStartISO:', monthStartISO);
+  console.log('getNextMonth result:', getNextMonth(monthStartISO));
+  
   const { data, error } = await supabase
     .from("reservation_availability")
-    .select(
-      `
-      available_date,
-      current_capacity,
-      pending,
-      reservation_slot:reservation_slot_id(max_capacity)
-    `
-    )
-    .gte("available_date", monthISO)
-    .lt("available_date", getNextMonth(monthISO))
-    .eq("reservation_slot.is_active", true);
+    .select("available_date, current_capacity, reservation_slot_id")
+    .gte("available_date", monthStartISO)
+    .lt("available_date", getNextMonth(monthStartISO));
+
+  console.log('Supabase query result - data:', data);
+  console.log('Supabase query result - error:', error);
 
   if (error)
     throw new ApiError("getMonthlyMetrics failed", {
       code: error.code,
       details: error,
     });
-  return data;
+  
+  // Now fetch the max_capacity for each slot
+  const enrichedData = await Promise.all(
+    (data || []).map(async (item) => {
+      const { data: slotData } = await supabase
+        .from("reservation_slots")
+        .select("max_capacity")
+        .eq("id", item.reservation_slot_id)
+        .single();
+      
+      return {
+        ...item,
+        max_capacity: slotData?.max_capacity || 100
+      };
+    })
+  );
+  
+  console.log('getMonthlyMetricsBackend data:', enrichedData);
+  return enrichedData;
 }
 
 export async function getDailyReservationsBackend(dateISO) {
@@ -95,6 +112,9 @@ export async function getDailyScheduleBackend(dateISO) {
 
 function getNextMonth(monthISO) {
   const date = new Date(monthISO);
-  date.setMonth(date.getMonth() + 1);
-  return date.toISOString().slice(0, 10);
+  // Get the year and month, then create a new date for the first day of next month
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-indexed (0=Jan, 1=Feb, etc.)
+  const nextMonth = new Date(year, month + 2, 1);
+  return nextMonth.toISOString().slice(0, 10);
 }

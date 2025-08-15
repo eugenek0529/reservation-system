@@ -41,7 +41,7 @@ export function AdminReservationProvider({ children }) {
 
       // Group by date and calculate totals
       const metrics = {};
-      data.forEach((item) => {
+      (data || []).forEach((item) => {
         const dateKey = item.available_date;
         if (!metrics[dateKey]) {
           metrics[dateKey] = {
@@ -51,22 +51,23 @@ export function AdminReservationProvider({ children }) {
             available: 0,
           };
         }
-        const maxCap = item.reservation_slot?.max_capacity || 0;
+        
+        // Use the actual max_capacity from your data (should be 12)
+        const maxCap = item.max_capacity || 12;
+        const availableCap = item.current_capacity || 0;
+        const pendingCap = 0; // No pending data in current query
+        const reservedCap = Math.max(0, maxCap - availableCap);
+
+        console.log(`Processing date ${dateKey}: maxCap=${maxCap}, availableCap=${availableCap}, pendingCap=${pendingCap}, reservedCap=${reservedCap}`);
+
         metrics[dateKey].total += maxCap;
-        metrics[dateKey].reserved += item.current_capacity || 0;
-        metrics[dateKey].pending += item.pending || 0;
+        metrics[dateKey].reserved += reservedCap;
+        metrics[dateKey].pending += pendingCap;
+        metrics[dateKey].available += availableCap;
       });
 
-      // Calculate available after summing all slots
-      Object.keys(metrics).forEach((dateKey) => {
-        metrics[dateKey].available = Math.max(
-          0,
-          metrics[dateKey].total -
-            metrics[dateKey].reserved -
-            metrics[dateKey].pending
-        );
-      });
-
+      console.log('Final calculated metrics:', metrics);
+      console.log('Dates with data:', Object.keys(metrics));
       setMonthlyMetrics(metrics);
     } catch (error) {
       console.error("Failed to fetch monthly metrics:", error);
@@ -79,20 +80,24 @@ export function AdminReservationProvider({ children }) {
   // Refresh data when date changes
   useEffect(() => {
     fetchDailySchedule(selectedDate);
-  }, [selectedDate, fetchDailySchedule]);
+    // Also fetch monthly metrics for the current month
+    const startOfMonth = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      1
+    );
+    fetchMonthlyMetrics(toLocalISOString(startOfMonth));
+  }, [selectedDate, fetchDailySchedule, fetchMonthlyMetrics]);
 
-  const value = {
-    selectedDate,
-    setSelectedDate,
-    dailySchedule,
-    monthlyMetrics,
-    loading: loading.schedule, // Expose a simpler loading state for the schedule
-    loadingMetrics: loading.metrics,
-    error,
-    refreshDailySchedule: () => fetchDailySchedule(selectedDate),
-    refreshMonthlyMetrics: (monthISO) => {
-      // You might want to pass the date from the calendar component here
-      const dateForMetrics = monthISO ? new Date(monthISO) : selectedDate;
+  const refreshDailySchedule = useCallback(
+    () => fetchDailySchedule(selectedDate),
+    [selectedDate, fetchDailySchedule]
+  );
+
+  const refreshMonthlyMetrics = useCallback(
+    (monthISO) => {
+      // Always use the current month if no monthISO is provided
+      const dateForMetrics = monthISO ? new Date(monthISO) : new Date();
       const startOfMonth = new Date(
         dateForMetrics.getFullYear(),
         dateForMetrics.getMonth(),
@@ -100,6 +105,19 @@ export function AdminReservationProvider({ children }) {
       );
       fetchMonthlyMetrics(toLocalISOString(startOfMonth));
     },
+    [fetchMonthlyMetrics]
+  );
+
+  const value = {
+    selectedDate,
+    setSelectedDate,
+    dailySchedule,
+    monthlyMetrics,
+    loading: loading.schedule, // Expose a simpler loading state for the schedule
+    loadingMetrics: loading.metrics, // Make sure this is exposed
+    error,
+    refreshDailySchedule,
+    refreshMonthlyMetrics,
   };
 
   return (
