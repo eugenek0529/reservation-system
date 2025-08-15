@@ -4,21 +4,28 @@ import DailyviewTimeline from "./Reservations/DailyviewTimeline";
 import MonthlyView from "./Reservations/MonthlyView";
 import ViewToggle from "./Reservations/ViewToggle";
 import DateNavigator from "./Reservations/DateNavigator";
+import NewReservationForm from "./Forms/NewReservationForm";
 import { ReservationAvailabilityAPI } from "../../api/reservationAvailabilityAPI";
 import { useAdminReservations } from "../../context/AdminReservationContext";
+import { supabase } from "../../supabase/supabaseClient"; // Add this import
 import { toLocalISOString } from "../../utils/dateUtils";
 
 function AdminReservationComponent() {
   const [viewMode, setViewMode] = useState("daily");
+  const [showReservationForm, setShowReservationForm] = useState(false);
+  const [formSubmitting, setFormSubmitting] = useState(false);
+
+ 
 
   // Use context instead of local state
   const {
     dailySchedule,
     monthlyMetrics,
     loading,
-    loadingMetrics, // Add this
+    loadingMetrics,
     selectedDate,
     setSelectedDate,
+    refreshDailySchedule,
     refreshMonthlyMetrics,
   } = useAdminReservations();
 
@@ -28,7 +35,7 @@ function AdminReservationComponent() {
       dailySchedule.flatMap((slot) =>
         slot.reservations.map((res) => ({
           ...res,
-          reservationTime: slot.startTime, // Add startTime for sorting/display in the list
+          reservationTime: slot.startTime,
         }))
       ),
     [dailySchedule]
@@ -40,13 +47,6 @@ function AdminReservationComponent() {
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState(null);
   const [monthError, setMonthError] = useState("");
-
-  // Reset to current month when switching to monthly view
-  useEffect(() => {
-    if (viewMode === "monthly") {
-      setSelectedDate(new Date()); // Reset to current month (August)
-    }
-  }, [viewMode]);
 
   const navigateDate = (dir) => {
     setSelectedDate((prev) => {
@@ -68,7 +68,7 @@ function AdminReservationComponent() {
   const monthStartISO = useMemo(() => {
     const d = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
     d.setHours(0, 0, 0, 0);
-    return toLocalISOString(d); // YYYY-MM-01
+    return toLocalISOString(d);
   }, [selectedDate]);
 
   const monthLabel = useMemo(
@@ -79,6 +79,13 @@ function AdminReservationComponent() {
       }),
     [selectedDate]
   );
+
+  // Reset to current month when switching to monthly view
+  useEffect(() => {
+    if (viewMode === "monthly") {
+      setSelectedDate(new Date()); // Reset to current month (August)
+    }
+  }, [viewMode, setSelectedDate]);
 
   // Check if month availability exists whenever monthly view + date changes
   useEffect(() => {
@@ -136,6 +143,52 @@ function AdminReservationComponent() {
     setViewMode("daily");
   };
 
+  // Handle reservation form submission
+  const handleCreateReservation = async (reservationData) => {
+    try {
+      setFormSubmitting(true);
+      
+      // Get admin ID directly from Supabase auth
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        throw new Error('User not authenticated');
+      }
+      
+      console.log('Creating reservation with admin ID:', user.id);
+      
+      // Create the reservation using your API
+      await ReservationAvailabilityAPI.createReservation({
+        date: reservationData.date,
+        reservationSlotId: reservationData.reservationSlotId,
+        adminUserId: user.id, // Get from Supabase auth
+        guests: reservationData.guests,
+        status: reservationData.status,
+        specialRequirements: reservationData.specialRequirements,
+        customerName: reservationData.customerName,
+        customerEmail: reservationData.contactEmail,
+        customerPhone: reservationData.contactPhone,
+      });
+
+      // Close the form
+      setShowReservationForm(false);
+      
+      // Refresh the data to show the new reservation
+      refreshDailySchedule(selectedDate);
+      if (viewMode === "monthly") {
+        refreshMonthlyMetrics();
+      }
+      
+      // Show success message
+      alert("Reservation created successfully!");
+      
+    } catch (error) {
+      console.error("Failed to create reservation:", error);
+      alert(`Failed to create reservation: ${error.message}`);
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
   return (
     <div className="p-6 bg-white min-h-screen">
       <div className="flex justify-between items-start mb-6">
@@ -145,7 +198,10 @@ function AdminReservationComponent() {
             Manage all reservations of the day and month
           </p>
         </div>
-        <button className="bg-gray-900 text-sm text-white px-4 py-2 rounded-lg hover:bg-gray-800">
+        <button 
+          onClick={() => setShowReservationForm(true)}
+          className="bg-gray-900 text-sm text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+        >
           New Reservation
         </button>
       </div>
@@ -193,52 +249,57 @@ function AdminReservationComponent() {
             </div>
           ) : (
             <div className="p-4 flex-1 border border-gray-200 min-h-screen rounded-lg">
-              {/* Month availability controls */}
-              <div className="mb-4">
-                {monthChecking ? (
-                  <div className="text-sm text-gray-500">
-                    Checking {monthLabel}…
-                  </div>
-                ) : !monthExists ? (
-                  <div className="flex items-center justify-between gap-3 p-3 border rounded-lg">
-                    <div className="text-sm text-gray-700">
-                      No availability found for {monthLabel}. Open reservations
-                      for this month?
-                    </div>
-                    <button
-                      onClick={handleOpenMonth}
-                      className="px-3 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50"
-                      disabled={seeding}
-                    >
-                      {seeding ? "Opening…" : `Open ${monthLabel}`}
-                    </button>
-                  </div>
-                ) : seedResult?.created >= 0 ? (
-                  <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-1 inline-block">
-                    Opened {monthLabel} (created {seedResult.created} rows)
-                  </div>
-                ) : null}
-                {monthError && (
-                  <div className="mt-2 text-xs text-red-600">{monthError}</div>
-                )}
-              </div>
-
-              {/* Calendar */}
-              {loadingMetrics ? ( // Change from loading to loadingMetrics
+              {monthChecking ? (
                 <div className="p-4 text-center text-gray-500">
-                  Loading calendar...
+                  Checking month availability...
                 </div>
+              ) : monthExists ? (
+                loadingMetrics ? (
+                  <div className="p-4 text-center text-gray-500">
+                    Loading monthly metrics...
+                  </div>
+                ) : (
+                  <MonthlyView
+                    selectedDate={selectedDate}
+                    metricsByDate={monthlyMetrics}
+                    onSelectDate={handleMonthDateSelect}
+                  />
+                )
               ) : (
-                <MonthlyView
-                  selectedDate={selectedDate}
-                  onSelectDate={handleMonthDateSelect}
-                  metricsByDate={monthlyMetrics}
-                />
+                <div className="p-4 text-center">
+                  <p className="text-gray-500 mb-4">
+                    No availability data for {monthLabel}
+                  </p>
+                  <button
+                    onClick={handleOpenMonth}
+                    disabled={seeding}
+                    className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    {seeding ? "Opening..." : "Open Month"}
+                  </button>
+                  {monthError && (
+                    <p className="text-red-600 text-sm mt-2">{monthError}</p>
+                  )}
+                  {seedResult && (
+                    <p className="text-green-600 text-sm mt-2">
+                      Created {seedResult.created} availability records
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}
         </div>
       </div>
+
+      {/* Reservation Form Modal */}
+      {showReservationForm && (
+        <NewReservationForm
+          selectedDate={selectedDate}
+          onSubmit={handleCreateReservation}
+          onCancel={() => setShowReservationForm(false)}
+        />
+      )}
     </div>
   );
 }
