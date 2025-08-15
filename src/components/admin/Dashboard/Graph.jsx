@@ -1,18 +1,54 @@
 import React, { useState } from 'react';
+import { useAdminReservations } from '../../../context/AdminReservationContext';
 
 const Graph = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const { dailySchedule } = useAdminReservations();
 
-  // Mock data - in a real app, this would come from props or API
-  const totalSeats = 180;
-  const reservations = 90;
-  const pending = 30;
-  const available = 60;
+  // Calculate real data from context for the selected date
+  const calculateDailyStats = (date) => {
+    if (!dailySchedule || dailySchedule.length === 0) {
+      return {
+        totalSeats: 0,
+        reservations: 0,
+        pending: 0,
+        available: 0
+      };
+    }
+
+    let totalSeats = 0;
+    let reservations = 0;
+    let pending = 0;
+    let available = 0;
+
+    dailySchedule.forEach(slot => {
+      totalSeats += slot.maxCapacity;
+      
+      slot.reservations.forEach(reservation => {
+        if (reservation.status === 'pending') {
+          pending += reservation.guestCount;
+        } else {
+          reservations += reservation.guestCount;
+        }
+      });
+    });
+
+    available = totalSeats - reservations - pending;
+
+    return {
+      totalSeats,
+      reservations,
+      pending,
+      available
+    };
+  };
+
+  const stats = calculateDailyStats(selectedDate);
 
   // Calculate percentages for the semicircle
-  const reservationPercentage = (reservations / totalSeats) * 100;
-  const pendingPercentage = (pending / totalSeats) * 100;
-  const availablePercentage = (available / totalSeats) * 100;
+  const reservationPercentage = stats.totalSeats > 0 ? (stats.reservations / stats.totalSeats) * 100 : 0;
+  const pendingPercentage = stats.totalSeats > 0 ? (stats.pending / stats.totalSeats) * 100 : 0;
+  const availablePercentage = stats.totalSeats > 0 ? (stats.available / stats.totalSeats) * 100 : 0;
   
   // Calculate stroke-dasharray values for the semicircle (circumference = π * radius)
   const radius = 80;
@@ -131,7 +167,7 @@ const Graph = () => {
           
           {/* Center Text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="text-4xl font-bold text-gray-800 mt-4">{totalSeats}</div>
+            <div className="text-4xl font-bold text-gray-800 mt-4">{stats.totalSeats}</div>
             <div className="text-sm text-gray-500">Total Seats</div>
           </div>
         </div>
@@ -149,7 +185,7 @@ const Graph = () => {
               <span className="text-gray-700">Total Reservations</span>
             </div>
             <div className="text-right">
-              <span className="font-semibold text-gray-800">{reservations}</span>
+              <span className="font-semibold text-gray-800">{stats.reservations}</span>
               <span className="text-sm text-gray-500 ml-1">({reservationPercentage.toFixed(1)}%)</span>
             </div>
           </div>
@@ -161,7 +197,7 @@ const Graph = () => {
               <span className="text-gray-700">Pending</span>
             </div>
             <div className="text-right">
-              <span className="font-semibold text-gray-800">{pending}</span>
+              <span className="font-semibold text-gray-800">{stats.pending}</span>
               <span className="text-sm text-gray-500 ml-1">({pendingPercentage.toFixed(1)}%)</span>
             </div>
           </div>
@@ -173,7 +209,7 @@ const Graph = () => {
               <span className="text-gray-700">Available</span>
             </div>
             <div className="text-right">
-              <span className="font-semibold text-gray-800">{available}</span>
+              <span className="font-semibold text-gray-800">{stats.available}</span>
               <span className="text-sm text-gray-500 ml-1">({availablePercentage.toFixed(1)}%)</span>
             </div>
           </div>

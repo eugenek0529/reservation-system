@@ -1,51 +1,95 @@
 import React from 'react';
+import { useAdminReservations } from '../../../context/AdminReservationContext';
 
 const InfoCards = () => {
-  // Mock data - in a real app, this would come from props or API
+  const { dailySchedule, monthlyMetrics, selectedDate } = useAdminReservations();
+
+  // Calculate real data from context
+  const calculateTodayStats = () => {
+    if (!dailySchedule || dailySchedule.length === 0) {
+      return {
+        totalReservations: 0,
+        totalGuests: 0,
+        pendingReservations: 0,
+        availableSeats: 0
+      };
+    }
+
+    let totalReservations = 0;
+    let totalGuests = 0;
+    let pendingReservations = 0;
+    let totalCapacity = 0;
+    let usedCapacity = 0;
+
+    dailySchedule.forEach(slot => {
+      totalCapacity += slot.maxCapacity;
+      usedCapacity += slot.currentCapacity;
+      totalReservations += slot.reservations.length;
+      
+      slot.reservations.forEach(reservation => {
+        totalGuests += reservation.guestCount;
+        if (reservation.status === 'pending') {
+          pendingReservations++;
+        }
+      });
+    });
+
+    const availableSeats = totalCapacity - usedCapacity;
+
+    return {
+      totalReservations,
+      totalGuests,
+      pendingReservations,
+      availableSeats
+    };
+  };
+
+  const stats = calculateTodayStats();
+
   const cardData = [
     {
-      title: "Total Reservations Made Today",
-      value: "4",
-      subtitle: "New bookings today",
+      title: "Total Reservations Today",
+      value: stats.totalReservations.toString(),
+      subtitle: "Bookings for today",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
         </svg>
       ),
-      color: "text-black "
+      color: "text-red-500" // Red for reservations
     },
     {
-      title: "Total Reservations Today",
-      value: "8",
-      subtitle: "All bookings today",
+      title: "Available Seats Today",
+      value: stats.availableSeats.toString(),
+      subtitle: "Seats still available",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
           <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
         </svg>
       ),
-      color: "text-reservation"
+      color: "text-green-500" // Green for available seats
     },
     {
-      title: "Pending",
-      value: "2",
+      title: "Pending Reservations",
+      value: stats.pendingReservations.toString(),
       subtitle: "Awaiting confirmation",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
       ),
-      color: "text-pending"
+      color: "text-yellow-500" // Yellow for pending
     },
     {
       title: "Total Guests Today",
-      value: "24",
+      value: stats.totalGuests.toString(),
       subtitle: "Expected today",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
           <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
         </svg>
       ),
-      color: "text-black"
+      color: "text-gray-800" // Dark gray for total guests
     }
   ];
 

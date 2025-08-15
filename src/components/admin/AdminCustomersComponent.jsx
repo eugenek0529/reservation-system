@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { CustomerAPI } from "../../api/customerAPI"; // Updated import
 
 function StatusBadge({ value }) {
   const map = {
@@ -13,17 +14,6 @@ function StatusBadge({ value }) {
   );
 }
 
-const mockCustomers = [
-  { id: 1, name: "Mike Davis",   email: "mike@example.com",   phone: "+1 (555) 456-7890", memberSince: "Jan 2024", visits: 22, lastVisit: "Aug 5",  status: "VIP" },
-  { id: 2, name: "Lisa Anderson",email: "lisa@example.com",   phone: "+1 (555) 789-0123", memberSince: "Feb 2024", visits: 18, lastVisit: "Jul 31", status: "VIP" },
-  { id: 3, name: "John Smith",   email: "john@example.com",   phone: "+1 (555) 123-4567", memberSince: "Mar 2024", visits: 15, lastVisit: "Aug 4",  status: "VIP" },
-  { id: 4, name: "David Brown",  email: "david@example.com",  phone: "+1 (555) 654-3210", memberSince: "Apr 2024", visits: 12, lastVisit: "Aug 1",  status: "Regular" },
-  { id: 5, name: "Jennifer White", email: "jennifer@example.com", phone: "+1 (555) 345-6789", memberSince: "May 2024", visits: 9, lastVisit: "Jul 29", status: "Regular" },
-  { id: 6, name: "Sarah Johnson", email: "sarah@example.com", phone: "+1 (555) 987-6543", memberSince: "Jun 2024", visits: 8, lastVisit: "Aug 3",  status: "Regular" },
-  { id: 7, name: "Emma Wilson",  email: "emma@example.com",   phone: "+1 (555) 321-0987", memberSince: "Aug 2024", visits: 5, lastVisit: "Aug 2",  status: "New" },
-  { id: 8, name: "Robert Taylor",email: "robert@example.com", phone: "+1 (555) 234-5678", memberSince: "Nov 2024", visits: 3, lastVisit: "Jul 30", status: "New" },
-];
-
 function initialsOf(name) {
   const parts = name.trim().split(/\s+/);
   return (parts[0]?.[0] || "") + (parts[1]?.[0] || "");
@@ -33,9 +23,32 @@ export default function AdminCustomersComponent() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All");
   const [sort, setSort] = useState("Most Visits");
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch customers on component mount
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await CustomerAPI.getCustomers(); // Updated API call
+        setCustomers(data);
+      } catch (err) {
+        setError(err.message);
+        console.error('Failed to fetch customers:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomers();
+  }, []);
 
   const rows = useMemo(() => {
-    let data = [...mockCustomers];
+    let data = [...customers];
+    
     if (query.trim()) {
       const q = query.toLowerCase();
       data = data.filter(
@@ -45,13 +58,49 @@ export default function AdminCustomersComponent() {
           c.phone.toLowerCase().includes(q)
       );
     }
+    
     if (status !== "All") data = data.filter((c) => c.status === status);
+    
     if (sort === "Most Visits") data.sort((a, b) => b.visits - a.visits);
     if (sort === "Last Visit") {
-      // Not exact date parsing here—just keep as-is for now or extend later
+      // Sort by member since date for now
+      data.sort((a, b) => new Date(b.memberSince) - new Date(a.memberSince));
     }
+    
     return data;
-  }, [query, status, sort]);
+  }, [customers, query, status, sort]);
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-white min-h-screen">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading customers...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-white min-h-screen">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-center">
+            <div className="text-red-600 mb-4">Error loading customers</div>
+            <p className="text-gray-600">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-white min-h-screen">
@@ -59,7 +108,9 @@ export default function AdminCustomersComponent() {
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Customer Directory</h1>
-          <p className="text-sm text-gray-500">View and manage your customers</p>
+          <p className="text-sm text-gray-500">
+            View and manage your customers ({customers.length} total)
+          </p>
         </div>
       </div>
 
@@ -117,7 +168,12 @@ export default function AdminCustomersComponent() {
                 </div>
                 <div>
                   <div className="text-sm text-gray-900">{c.name}</div>
-                  <div className="text-xs text-gray-500">Member since {c.memberSince}</div>
+                  <div className="text-xs text-gray-500">
+                    Member since {c.memberSince}
+                    {c.source === "customer" && (
+                      <span className="ml-2 text-blue-600">(Admin Created)</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -128,13 +184,13 @@ export default function AdminCustomersComponent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 12a4 4 0 10-8 0 4 4 0 008 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 14v7m-7-3a9 9 0 1114 0" />
                   </svg>
-                  <span className="truncate">{c.email}</span>
+                  <span className="truncate">{c.email || "No email"}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 5a2 2 0 012-2h2l3 6-2 1a11 11 0 005 5l1-2 6 3v2a2 2 0 01-2 2h-1C9.163 20 4 14.837 4 8V7a2 2 0 01-1-2z" />
                   </svg>
-                  <span>{c.phone}</span>
+                  <span>{c.phone || "No phone"}</span>
                 </div>
               </div>
 
@@ -142,7 +198,7 @@ export default function AdminCustomersComponent() {
               <div className="col-span-2">
                 <div className="flex items-center gap-2 text-sm text-gray-900">
                   <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 7V3m8 4V3M3 11h18M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 7V3m8 4V3M3 11h18M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 10a2 2 0 002 2z" />
                   </svg>
                   {c.visits}
                 </div>
@@ -160,7 +216,7 @@ export default function AdminCustomersComponent() {
                   <StatusBadge value={c.status} />
                   <button className="p-1.5 rounded hover:bg-gray-100">
                     <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0z" />
+                      <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM18 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </button>
                 </div>
@@ -168,7 +224,9 @@ export default function AdminCustomersComponent() {
             </div>
           ))}
           {rows.length === 0 && (
-            <div className="px-4 py-10 text-center text-sm text-gray-500">No customers found.</div>
+            <div className="px-4 py-10 text-center text-sm text-gray-500">
+              {customers.length === 0 ? "No customers found." : "No customers match your search."}
+            </div>
           )}
         </div>
       </div>
