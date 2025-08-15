@@ -52,11 +52,13 @@ export function AdminReservationProvider({ children }) {
           };
         }
         
-        // Use the actual max_capacity from your data (should be 12)
+        // Fix the logic: current_capacity represents reserved seats, not available
         const maxCap = item.max_capacity || 12;
-        const availableCap = item.current_capacity || 0;
+        const reservedCap = item.current_capacity || 0; // This is reserved seats
         const pendingCap = 0; // No pending data in current query
-        const reservedCap = Math.max(0, maxCap - availableCap);
+        
+        // Available seats = total - reserved
+        const availableCap = maxCap - reservedCap;
 
         console.log(`Processing date ${dateKey}: maxCap=${maxCap}, availableCap=${availableCap}, pendingCap=${pendingCap}, reservedCap=${reservedCap}`);
 
