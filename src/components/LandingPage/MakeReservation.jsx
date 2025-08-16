@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ReservationAvailabilityPopup from './ReservationAvailabilityPopup';
 
 function MakeReservation() {
   const [partySize, setPartySize] = useState(2);
@@ -7,13 +8,24 @@ function MakeReservation() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [showAvailability, setShowAvailability] = useState(false);
 
-  // Example: fixed session times
-  const timeOptions = [
-    { label: "Lunch (12:00 PM)", value: "12:00" },
-    { label: "Dinner 1 (5:30 PM)", value: "17:30" },
-    { label: "Dinner 2 (8:00 PM)", value: "20:00" },
-  ];
+  // Replace your existing timeOptions array with this more flexible approach
+  const generateTimeSlots = () => {
+    const slots = [];
+    const openHour = 11; // 11 AM
+    const closeHour = 22; // 10 PM
+    
+    for (let hour = openHour; hour < closeHour; hour++) {
+      const timeString = hour < 12 ? `${hour}:00 AM` : hour === 12 ? '12:00 PM' : `${hour - 12}:00 PM`;
+      const value = `${hour.toString().padStart(2, '0')}:00`;
+      slots.push({ label: timeString, value: value });
+    }
+    
+    return slots;
+  };
+
+  const timeOptions = generateTimeSlots();
 
   const handlePartySizeChange = (change) => {
     // guest size range 1 to max 12
@@ -52,9 +64,9 @@ function MakeReservation() {
     const newErrors = validateForm();
     setErrors(newErrors);
     
-    // If no errors, submit the form
+    // If no errors, show availability popup instead of just logging
     if (Object.keys(newErrors).length === 0) {
-      console.log("Form submitted", { partySize, selectedDate, time });
+      setShowAvailability(true); // This will open the popup
     }
   };
 
@@ -65,6 +77,12 @@ function MakeReservation() {
     // Validate on blur
     const newErrors = validateForm();
     setErrors(newErrors);
+  };
+
+  const handleBookReservation = (slot) => {
+    // TODO: Implement booking logic
+    console.log('Booking slot:', slot);
+    setShowAvailability(false); // Close popup after booking
   };
 
   return (
@@ -103,26 +121,27 @@ function MakeReservation() {
             Date
           </label>
           <button
-            data-testid="date-button"
-            type="button"
-            onClick={toggleCalendar}
-            className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left bg-white hover:bg-gray-50 transition-colors duration-200 ${
-              errors.date ? 'border-red-500' : 'border-gray-300'
-            }`}
-          >
-            {selectedDate ? (
-              <span className="text-gray-800">
-                {new Date(selectedDate).toLocaleDateString(undefined, {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric"
-                })}
-              </span>
-            ) : (
-              <span className="text-gray-500">Select a date</span>
-            )}
-          </button>
+  data-testid="date-button"
+  type="button"
+  onClick={toggleCalendar}
+  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left bg-white hover:bg-gray-50 transition-colors duration-200 ${
+    errors.date ? 'border-red-500' : 'border-gray-300'
+  }`}
+>
+  {selectedDate ? (
+    <span className="text-gray-800">
+      {/* Fix: Create a date object from YYYY-MM-DD to avoid UTC offset issues */}
+      {new Date(selectedDate.replace(/-/g, '/')).toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      })}
+    </span>
+  ) : (
+    <span className="text-gray-500">Select a date</span>
+  )}
+</button>
           
           {errors.date && (
             <div className="text-red-500 text-sm mt-1">{errors.date}</div>
@@ -152,13 +171,13 @@ function MakeReservation() {
             value={time}
             onChange={(e) => {
               setTime(e.target.value);
-              // Clear time error when time is selected
               setErrors(prev => ({ ...prev, time: undefined }));
             }}
           >
             <option value="" disabled>
               Select a time
             </option>
+            <option value="closest">Find Closest Available Time</option>
             {timeOptions.map((t) => (
               <option key={t.value} value={t.value}>
                 {t.label}
@@ -178,6 +197,14 @@ function MakeReservation() {
           Search
         </button>
       </form>
+      
+      {/* Availability Popup */}
+      <ReservationAvailabilityPopup
+        isOpen={showAvailability}
+        onClose={() => setShowAvailability(false)}
+        selectedDate={selectedDate}
+        onBookReservation={handleBookReservation}
+      />
     </div>
   );
 }
@@ -214,6 +241,16 @@ function CalendarGrid({ selectedDate, onDateSelect }) {
     });
   };
 
+  const handleDateClick = (date) => {
+    // Fix timezone issue by using local date string
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const localDateString = `${year}-${month}-${day}`;
+    
+    onDateSelect(localDateString);
+  };
+
   return (
     <div className="p-4">
       {/* Month Header */}
@@ -238,11 +275,11 @@ function CalendarGrid({ selectedDate, onDateSelect }) {
             {date ? (
               <button
                 type="button"
-                onClick={() => onDateSelect(date.toISOString().split('T')[0])}
+                onClick={() => handleDateClick(date)} // Use the new function
                 className={`w-full h-8 rounded-md text-sm font-medium transition-colors duration-200 ${
                   date < today 
                     ? 'text-gray-300 cursor-not-allowed bg-gray-50' 
-                    : date.toISOString().split('T')[0] === selectedDate
+                    : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` === selectedDate
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'text-gray-700 hover:bg-blue-100 cursor-pointer'
                 }`}
@@ -259,5 +296,5 @@ function CalendarGrid({ selectedDate, onDateSelect }) {
     </div>
   );
 }
-
 export default MakeReservation;
+

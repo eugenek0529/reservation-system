@@ -22,10 +22,10 @@ function LandingPage() {
       <div className="landing-page-container mx-5 px-4 py-4">
         <RestaurantGallery />
         <div className="landing-page-content flex mt-5">
-          <div className="details flex-2">
+          <div className="details flex-2 mx-4">
             <RestaurantDetails />
           </div>
-          <div className="make-reservation flex-1">
+          <div className="make-reservation flex-1 mx-4">
             <MakeReservation />
           </div>
         </div>
