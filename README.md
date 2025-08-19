@@ -1,12 +1,12 @@
-# 🍣 Sushi Yuen (NOT REAL) Reservation System
+# 🍣 Restaurant Reservation System (not an official reservation)
 
-A web-based reservation system built for **Sushi Yuen**, allowing customers to book dining sessions and admins to manage reservations with ease.
+A web-based reservation system built for **Sushi Yuen**, allowing customers to book dining sessions and admins to manage reservations with ease. This project is admin based logic. 
 
 ## 🔧 Tech Stack
 
 - **Frontend**: React, Tailwind CSS
-- **Authentication & DB**: Supabase
-- **Backend (planned)**: Node.js + Express (for complex logic like admin controls)
+- **Authentication & DB**: Supabase, OAuth
+- **DB Communication**: Facade structure to communicate with DB 
 
 ## 🧠 Features
 
@@ -16,6 +16,8 @@ A web-based reservation system built for **Sushi Yuen**, allowing customers to b
 - Browse available time slots
 - Book a reservation
 - View existing bookings
+- Create new reservation type
+- Manage useres
 
 ### 🧑‍💼 Admin
 
@@ -49,7 +51,7 @@ A web-based reservation system built for **Sushi Yuen**, allowing customers to b
 - [x] Basic auth + role management
 - [ ] Customer booking flow
 - [ ] Admin dashboard
-- [ ] Backend server for admin logic
+- [ ] DB and backend logic for admin logic
 
 ## 🚀 Running Locally
 
