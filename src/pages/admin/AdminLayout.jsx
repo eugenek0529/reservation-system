@@ -37,7 +37,7 @@ function AdminLayout({ children }) {
 
         {/* Main Content - Right */}
         <div className="flex-1 overflow-auto">
-          <div className="p-6">{children}</div>
+          <div className="p-3">{children}</div>
         </div>
       </div>
     </div>

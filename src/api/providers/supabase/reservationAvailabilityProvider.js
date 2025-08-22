@@ -104,6 +104,8 @@ export async function getDailyScheduleBackend(dateISO) {
     p_date: dateISO,
   });
 
+
+
   if (error) {
     throw new ApiError("getDailySchedule failed", {
       code: error.code,

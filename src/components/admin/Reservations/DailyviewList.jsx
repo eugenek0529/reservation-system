@@ -12,15 +12,8 @@ function DailyviewList({ reservations = [] }) {
 
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
-  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
 
-  const handleCardClick = (reservation, event) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    
-    setPopupPosition({
-      x: rect.right + 10, // 10px to the right of the card
-      y: rect.top
-    });
+  const handleCardClick = (reservation) => {
     setSelectedReservation(reservation);
     setShowPopup(true);
   };
@@ -28,6 +21,12 @@ function DailyviewList({ reservations = [] }) {
   const handleClosePopup = () => {
     setSelectedReservation(null);
     setShowPopup(false);
+  };
+
+  const handleBackdropClick = (event) => {
+    if (event.target === event.currentTarget) {
+      handleClosePopup();
+    }
   };
 
   return (
@@ -40,15 +39,15 @@ function DailyviewList({ reservations = [] }) {
       </div>
 
       {/* cards */}
-      <div className="space-y-3">
+      <div className="space-y-1.5">
         {sorted.map((r) => (
           <div
             key={r.id}
-            className="border border-gray-200 rounded-xl bg-white h-28 p-4 flex flex-col justify-between cursor-pointer hover:bg-gray-50 relative"
-            onClick={(event) => handleCardClick(r, event)}
+            className="border border-gray-300 rounded-xl  h-28 p-4 flex flex-col justify-between cursor-pointer bg-gray-50 hover:bg-gray-100 relative"
+            onClick={() => handleCardClick(r)}
           >
             {/* name only (small, no bold) */}
-            <div className="text-sm text-gray-900">
+            <div className="text-sm font-semibold text-gray-900">
               {r.guestName || "Unknown"}
             </div>
 
@@ -100,21 +99,29 @@ function DailyviewList({ reservations = [] }) {
             ) : (
               <div className="text-[11px] text-transparent select-none">.</div>
             )}
-            
-            {/* Popup positioned next to this specific card */}
-            {showPopup && selectedReservation && selectedReservation.id === r.id && (
-              <div 
-                className="absolute left-full ml-2 top-0 z-50"
-              >
-                <ReservationDetailPopup
-                  reservation={selectedReservation}
-                  onClose={handleClosePopup}
-                />
-              </div>
-            )}
           </div>
         ))}
       </div>
+
+      {/* Centered popup with darkened backdrop */}
+      {showPopup && selectedReservation && (
+        <>
+          {/* Darkened backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/30 z-40"
+            onClick={handleBackdropClick}
+          />
+          {/* Centered popup positioned in the middle of the entire page */}
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+            <div className="bg-white rounded-lg shadow-xl w-[600px] mx-4 max-h-[90vh] overflow-y-auto"> {/* Changed from w-[800px] to w-[600px] */}
+              <ReservationDetailPopup
+                reservation={selectedReservation}
+                onClose={handleClosePopup}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

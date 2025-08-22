@@ -68,9 +68,9 @@ function DailyviewTimeline({ schedule = [] }) {
 
       {/* timeline columns */}
       <div
-        className="grid gap-4"
+        className="grid gap-4 overflow-x-auto"
         style={{
-          gridTemplateColumns: `repeat(${timelineSlots.length}, minmax(120px, 1fr))`,
+          gridTemplateColumns: `repeat(${timelineSlots.length}, minmax(100px, 120px))`, // Max width of 120px instead of unlimited
         }}
       >
         {timelineSlots.map((slot) => (

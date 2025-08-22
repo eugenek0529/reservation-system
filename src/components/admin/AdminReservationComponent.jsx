@@ -190,28 +190,28 @@ function AdminReservationComponent() {
   };
 
   return (
-    <div className="p-6 bg-white min-h-screen">
-      <div className="flex justify-between items-start mb-6">
+    <div className="p-4 bg-white"> 
+      <div className="flex justify-between items-start mb-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Reservations</h1>
+          <h1 className="text-lg font-bold text-gray-900 mb-2">Reservations</h1> 
           <p className="text-sm text-gray-500">
             Manage all reservations of the day and month
           </p>
         </div>
         <button 
           onClick={() => setShowReservationForm(true)}
-          className="bg-gray-900 text-sm text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          className="bg-gray-900 text-sm text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors" 
         >
           New Reservation
         </button>
       </div>
 
-      <div className="p-4 border border-gray-300 rounded-lg flex min-h-screen">
+      <div className="p-3 border border-gray-300 rounded-lg flex"> {/* Increased from p-2 to p-3 */}
         <div className="w-full">
-          <div className="mb-3">
+          <div className="mb-3"> {/* Increased from mb-2 to mb-3 */}
             <ViewToggle value={viewMode} onChange={setViewMode} />
           </div>
-          <div className="mb-6">
+          <div className="mb-4"> {/* Increased from mb-4 to mb-4 (kept same) */}
             <DateNavigator
               viewMode={viewMode}
               date={selectedDate}
@@ -221,10 +221,10 @@ function AdminReservationComponent() {
           </div>
 
           {viewMode === "daily" ? (
-            <div className="p-4 flex gap-3">
+            <div className="p-3 flex gap-3"> 
               <div className="flex-1 border border-gray-200 rounded-lg">
                 {loading ? (
-                  <div className="p-4 text-center text-gray-500">
+                  <div className="p-4 text-center text-gray-500"> 
                     Loading reservations...
                   </div>
                 ) : (
@@ -236,7 +236,7 @@ function AdminReservationComponent() {
               </div>
               <div className="flex-[2] border border-gray-200 rounded-lg">
                 {loading ? (
-                  <div className="p-4 text-center text-gray-500">
+                  <div className="p-4 text-center text-gray-500"> 
                     Loading timeline...
                   </div>
                 ) : (
@@ -248,7 +248,7 @@ function AdminReservationComponent() {
               </div>
             </div>
           ) : (
-            <div className="p-4 flex-1 border border-gray-200 min-h-screen rounded-lg">
+            <div className="p-4 flex-1 border border-gray-200 rounded-lg"> {/* Increased from p-3 to p-4 */}
               {monthChecking ? (
                 <div className="p-4 text-center text-gray-500">
                   Checking month availability...

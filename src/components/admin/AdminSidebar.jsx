@@ -95,7 +95,7 @@ function AdminSidebar({ expanded, onToggle }) {
               </svg>
               {expanded && <span>Dashboard</span>}
             </div>
-            {expanded && <span className="badge">12</span>}
+            
           </button>
         </li>
         <li>
@@ -122,7 +122,7 @@ function AdminSidebar({ expanded, onToggle }) {
               </svg>
               {expanded && <span>Reservations</span>}
             </div>
-            {expanded && <span className="badge">12</span>}
+            
           </button>
         </li>
         <li>
@@ -149,7 +149,7 @@ function AdminSidebar({ expanded, onToggle }) {
               </svg>
               {expanded && <span>Customers</span>}
             </div>
-            {expanded && <span className="badge">156</span>}
+            
           </button>
         </li>
         <li>

@@ -28,11 +28,11 @@ function AdminHeader() {
   }, []);
 
   return (
-    <div className="bg-white border-b border-gray-300 px-6 py-2">
+    <div className="bg-white border-b border-gray-300 px-4 py-1"> {/* Reduced from px-6 py-2 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <h1 className="text-xl font-semibold">Sushi Yuen</h1>
-          <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
+          <h1 className="text-lg font-semibold">Sushi Yuen</h1> {/* Reduced from text-xl */}
+          <span className="px-1.5 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full"> {/* Reduced from px-2 py-1 */}
             Admin
           </span>
         </div>
