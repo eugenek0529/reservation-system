@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import ReservationDetailPopup from "./ReservationDetailPopUp";
+import ReservationDetailPopup from "./ReservationDetailPopup";
 
 function DailyviewList({ reservations = [] }) {
   const sorted = useMemo(
