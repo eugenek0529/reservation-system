@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import ReservationDetailPopup from "./ReservationDetailPopUp";
 
 function DailyviewList({ reservations = [] }) {
   const sorted = useMemo(
@@ -8,16 +9,34 @@ function DailyviewList({ reservations = [] }) {
       ),
     [reservations]
   );
-  
+
+  const [selectedReservation, setSelectedReservation] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+
+  const handleCardClick = (reservation, event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    
+    setPopupPosition({
+      x: rect.right + 10, // 10px to the right of the card
+      y: rect.top
+    });
+    setSelectedReservation(reservation);
+    setShowPopup(true);
+  };
+
+  const handleClosePopup = () => {
+    setSelectedReservation(null);
+    setShowPopup(false);
+  };
 
   return (
-    <div className="p-4">
+    <div className="p-4 relative">
       {/* header summary */}
       <div className="mb-4">
         <h2 className="text-base text-gray-800">
           Today's Reservations ({sorted.length})
         </h2>
-        
       </div>
 
       {/* cards */}
@@ -25,7 +44,8 @@ function DailyviewList({ reservations = [] }) {
         {sorted.map((r) => (
           <div
             key={r.id}
-            className="border border-gray-200 rounded-xl bg-white h-28 p-4 flex flex-col justify-between"
+            className="border border-gray-200 rounded-xl bg-white h-28 p-4 flex flex-col justify-between cursor-pointer hover:bg-gray-50 relative"
+            onClick={(event) => handleCardClick(r, event)}
           >
             {/* name only (small, no bold) */}
             <div className="text-sm text-gray-900">
@@ -33,7 +53,7 @@ function DailyviewList({ reservations = [] }) {
             </div>
 
             {/* meta row: guests + time (small) */}
-            <div className="flex items-center gap-6 text-xs text-gray-600">
+            <div className="flex items-center gap-2 text-xs text-gray-600">
               <div className="flex items-center gap-1">
                 {/* user icon */}
                 <svg
@@ -79,6 +99,18 @@ function DailyviewList({ reservations = [] }) {
               </div>
             ) : (
               <div className="text-[11px] text-transparent select-none">.</div>
+            )}
+            
+            {/* Popup positioned next to this specific card */}
+            {showPopup && selectedReservation && selectedReservation.id === r.id && (
+              <div 
+                className="absolute left-full ml-2 top-0 z-50"
+              >
+                <ReservationDetailPopup
+                  reservation={selectedReservation}
+                  onClose={handleClosePopup}
+                />
+              </div>
             )}
           </div>
         ))}

@@ -76,6 +76,7 @@ export async function getDailyReservationsBackend(dateISO) {
       special_requirements,
       status,
       user_profile:user_id(name),
+      customer:customer_id(name),
       reservation_availability:reservation_availability_id(
         available_date,
         reservation_slot:reservation_slot_id(
@@ -92,6 +93,9 @@ export async function getDailyReservationsBackend(dateISO) {
       code: error.code,
       details: error,
     });
+
+   
+
   return data || [];
 }
 
